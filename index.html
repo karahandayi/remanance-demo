@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>REMANENCE</title>
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet/dist/leaflet.css"
+  />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ANA KONTEYNER -->
+  <div class="app">
+
+    <!-- HARİTA ALANI -->
+    <div id="map"></div>
+
+    <!-- SAĞ PANEL -->
+    <aside class="sidebar">
+
+      <!-- LOGO / BAŞLIK -->
+      <header class="header">
+        <h1>REMANENCE</h1>
+      </header>
+
+      <!-- VATANDAŞ KODU -->
+      <section class="panel-section">
+        <h2>Vatandaş Kodu Arama</h2>
+        <input
+          type="text"
+          placeholder="Vatandaş Kodunu Girin"
+        />
+      </section>
+
+      <!-- TEHDİT SEVİYESİ -->
+      <section class="panel-section">
+        <h2>Tehdit Seviyesi</h2>
+        <p class="critical">KRİTİK</p>
+      </section>
+
+      <!-- NÜFUS -->
+      <section class="panel-section">
+        <h2>Sağ Kalan Nüfus</h2>
+        <p>12,480,000</p>
+      </section>
+
+      <!-- SALGIN SÜRESİ -->
+      <section class="panel-section">
+        <h2>Salgın Başlayalı</h2>
+        <p>4 Gün</p>
+      </section>
+
+      <!-- SON OLAYLAR -->
+      <section class="panel-section">
+        <h2>Son Büyük Olaylar</h2>
+        <ul>
+          <li>İstanbul karantinası başarısız</li>
+          <li>Ankara ile temas kesildi</li>
+          <li>Doğu sınırı ele geçirildi</li>
+        </ul>
+      </section>
+
+    </aside>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>
