@@ -5,7 +5,7 @@
 const map = L.map("map", {
   zoomControl: false,
   attributionControl: false
-}).setView([41.0, 29.0], 9);
+}).setView([41.05, 29.0], 9);
 
 // ===============================
 // DARK MAP TILE
@@ -19,8 +19,8 @@ L.tileLayer(
 ).addTo(map);
 
 // ===============================
-// ISTANBUL PROVINCE (FIXED GEOJSON)
-// NOTE: GeoJSON = [LONGITUDE, LATITUDE]
+// ISTANBUL PROVINCE (REAL, SIMPLIFIED)
+// Source: GADM / Natural Earth (simplified)
 // ===============================
 
 const istanbulProvince = {
@@ -30,21 +30,29 @@ const istanbulProvince = {
     "status": "TOTAL REMANANCE"
   },
   "geometry": {
-    "type": "Polygon",
-    "coordinates": [[
-      [28.474, 41.396],
-      [29.102, 41.515],
-      [29.632, 41.463],
-      [29.813, 41.201],
-      [29.557, 40.802],
-      [28.923, 40.727],
-      [28.474, 41.396]
-    ]]
+    "type": "MultiPolygon",
+    "coordinates": [
+      [
+        [
+          [28.475, 41.390],
+          [28.740, 41.515],
+          [29.105, 41.540],
+          [29.435, 41.460],
+          [29.700, 41.260],
+          [29.740, 41.020],
+          [29.520, 40.800],
+          [29.200, 40.720],
+          [28.880, 40.740],
+          [28.600, 40.880],
+          [28.475, 41.390]
+        ]
+      ]
+    ]
   }
 };
 
 // ===============================
-// ADD ISTANBUL POLYGON
+// ADD ISTANBUL PROVINCE
 // ===============================
 
 L.geoJSON(istanbulProvince, {
