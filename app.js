@@ -1,7 +1,12 @@
 const map = L.map("map", {
-  zoomControl: false
-}).setView([39.0, 35.0], 6); // Türkiye merkez
+  zoomControl: false,
+  attributionControl: false
+}).setView([39.0, 35.0], 6);
 
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  attribution: "&copy; OpenStreetMap"
-}).addTo(map);
+// 🔴 KARANLIK HARİTA (CARTO DARK)
+L.tileLayer(
+  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+  {
+    maxZoom: 19
+  }
+).addTo(map);
