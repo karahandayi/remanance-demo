@@ -1,7 +1,15 @@
+// ===============================
+// REMANANCE MAP INITIALIZATION
+// ===============================
+
 const map = L.map("map", {
   zoomControl: false,
   attributionControl: false
 }).setView([39.0, 35.0], 6);
+
+// ===============================
+// DARK MAP TILE (CARTO DARK)
+// ===============================
 
 L.tileLayer(
   "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
@@ -9,6 +17,11 @@ L.tileLayer(
     maxZoom: 19
   }
 ).addTo(map);
+
+// ===============================
+// CITY DATA
+// ===============================
+
 const cities = [
   {
     name: "İstanbul",
@@ -29,6 +42,11 @@ const cities = [
     color: "#2ecc71"
   }
 ];
+
+// ===============================
+// ADD MARKERS TO MAP
+// ===============================
+
 cities.forEach(city => {
   const marker = L.circleMarker(city.coords, {
     radius: 10,
