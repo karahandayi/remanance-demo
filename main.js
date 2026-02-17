@@ -1,5 +1,3 @@
-alert("MAIN.JS LOADED");
-
 // ===============================
 // REMANANCE MAP INITIALIZATION
 // ===============================
@@ -71,5 +69,6 @@ L.geoJSON(istanbulProvince, {
     `);
   }
 }).addTo(map);
+
 
 
