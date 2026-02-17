@@ -1,5 +1,5 @@
 // ===============================
-// REMANENCE – HARD WIRED GEOJSON
+// REMANENCE – TURKEY PROVINCES (LOCAL FILE)
 // ===============================
 
 const map = L.map("map", {
@@ -7,73 +7,76 @@ const map = L.map("map", {
   attributionControl: false
 }).setView([39, 35], 6);
 
-// Dark basemap
+// Dark map
 L.tileLayer(
   "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
   { maxZoom: 19 }
 ).addTo(map);
 
 // ===============================
-// INLINE GEOJSON (NO FETCH)
+// PROVINCE STATUS
 // ===============================
 
-const turkeyGeoJSON = {
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "properties": { "name": "Istanbul", "status": "RED" },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[28.5,41.4],[29.8,41.4],[29.8,40.7],[28.5,40.7],[28.5,41.4]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": { "name": "Ankara", "status": "ORANGE" },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[32.4,40.2],[33.2,40.2],[33.2,39.6],[32.4,39.6],[32.4,40.2]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": { "name": "Izmir", "status": "RED" },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[26.8,38.7],[27.6,38.7],[27.6,37.9],[26.8,37.9],[26.8,38.7]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": { "name": "Other", "status": "GREEN" },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[25.5,42],[45,42],[45,35],[25.5,35],[25.5,42]]]
-      }
-    }
-  ]
+const provinceStatus = {
+  istanbul: { color: "#7a0000", status: "TOTAL REMANANCE" },
+  ankara:   { color: "#ff7a00", status: "ACTIVE REMANANCE" },
+  izmir:    { color: "#7a0000", status: "TOTAL REMANANCE" }
+};
+
+const DEFAULT = {
+  color: "#2ecc71",
+  status: "CONTROLLED"
 };
 
 // ===============================
-// COLOR LOGIC
+// HELPER
 // ===============================
 
-function getColor(status) {
-  if (status === "RED") return "#7a0000";
-  if (status === "ORANGE") return "#ff7a00";
-  return "#2ecc71";
+function normalize(str) {
+  return str
+    .toLowerCase()
+    .replace(/ı/g, "i")
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c");
 }
 
 // ===============================
-// DRAW
+// LOAD LOCAL GEOJSON
 // ===============================
 
-L.geoJSON(turkeyGeoJSON, {
-  style: feature => ({
-    fillColor: getColor(feature.properties.status),
-    fillOpacity: 0.7,
-    color: "#000",
-    weight: 0.3
+fetch("data/turkey-provinces.geojson")
+  .then(res => res.json())
+  .then(data => {
+
+    L.geoJSON(data, {
+      style: feature => {
+        const rawName = feature.properties.name || feature.properties.NAME_1;
+        const key = normalize(rawName);
+        const cfg = provinceStatus[key] || DEFAULT;
+
+        return {
+          fillColor: cfg.color,
+          fillOpacity: 0.65,
+          color: cfg.color,   // sınır rengi dolgu ile aynı
+          weight: 0.4
+        };
+      },
+      onEachFeature: (feature, layer) => {
+        const rawName = feature.properties.name || feature.properties.NAME_1;
+        const key = normalize(rawName);
+        const cfg = provinceStatus[key] || DEFAULT;
+
+        layer.bindPopup(`
+          <strong>${rawName}</strong><br/>
+          Durum: <b>${cfg.status}</b>
+        `);
+      }
+    }).addTo(map);
+
   })
-}).addTo(map);
+  .catch(err => {
+    console.error("GeoJSON yüklenemedi:", err);
+  });
