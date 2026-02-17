@@ -1,205 +1,298 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>REMANANCE – Simulation Demo</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REMANANCE | TR-81 OUTBREAK MONITOR</title>
+    <style>
+        /* --- CORE VISUALS (CINEMATIC/DOCUMENTARY) --- */
+        :root {
+            --bg-void: #050505;
+            --panel-bg: #0f0f0f;
+            --text-main: #b0b0b0;
+            --text-muted: #555;
+            --border: #222;
+            
+            /* Status Colors */
+            --safe: #1a3a2a;      /* Deep Muted Green */
+            --safe-glow: #2ecc71; 
+            --active: #7d4e00;    /* Deep Muted Orange */
+            --active-glow: #f39c12;
+            --critical: #5a0b0b;  /* Deep Muted Red */
+            --critical-glow: #c0392b;
+            
+            --font-stack: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif;
+            --mono-stack: 'Courier New', Courier, monospace;
+        }
 
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: Arial, Helvetica, sans-serif;
-    }
+        * { box-sizing: border-box; }
 
-    body {
-      background: #000;
-      color: #fff;
-      overflow: hidden;
-    }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-void);
+            color: var(--text-main);
+            font-family: var(--font-stack);
+            height: 100vh;
+            overflow: hidden; /* Prevent scrolling */
+            display: flex;
+        }
 
-    .app {
-      display: flex;
-      width: 100vw;
-      height: 100vh;
-    }
+        /* --- LEFT: MAP AREA --- */
+        #viewport {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, #111 0%, #000 100%);
+        }
 
-    /* HARİTA ALANI */
-    .map {
-      flex: 1;
-      background: radial-gradient(
-        circle at center,
-        #1a1a1a 0%,
-        #0b0b0b 65%,
-        #000 100%
-      );
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+        /* The Map Container */
+        #map-stage {
+            width: 90%;
+            height: 90%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-    /* SVG */
-    svg {
-      width: 90%;
-      height: 90%;
-    }
+        /* SVG Styling */
+        svg {
+            width: 100%;
+            height: 100%;
+            max-height: 80vh;
+            filter: drop-shadow(0 0 20px rgba(0,0,0,1));
+        }
 
-    /* TÜM İLLER */
-    .province {
-      fill: #2ecc71;          /* kontrollü */
-      stroke: #111;
-      stroke-width: 0.5;
-      transition: fill 0.3s ease;
-      cursor: pointer;
-    }
+        path {
+            stroke: #000;
+            stroke-width: 0.5px;
+            transition: fill 0.5s ease, opacity 0.3s ease;
+            cursor: default; /* Passive observation */
+        }
 
-    /* DURUMLAR */
-    .total {
-      fill: #7a0000;          /* total remanance */
-    }
+        /* Status Classes Applied via JS */
+        .province-safe { fill: var(--safe); }
+        .province-active { fill: var(--active); }
+        .province-critical { fill: var(--critical); }
 
-    .active {
-      fill: #ff7a00;          /* active */
-    }
+        /* Hover Effect (For Search/ID Purposes Only) */
+        path:hover {
+            opacity: 0.8;
+            stroke: #fff;
+            stroke-width: 1px;
+        }
 
-    .province:hover {
-      fill: #aaaaaa;
-    }
+        /* Map Overlay Text */
+        .overlay-text {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            font-family: var(--mono-stack);
+            font-size: 2rem;
+            color: #333;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            pointer-events: none;
+            user-select: none;
+        }
 
-    /* SAĞ PANEL */
-    .sidebar {
-      width: 360px;
-      background: linear-gradient(180deg, #0b0b0b, #000);
-      padding: 24px;
-      border-left: 1px solid #222;
-      overflow-y: auto;
-    }
+        /* --- RIGHT: INFO PANEL --- */
+        #sidebar {
+            width: 350px;
+            background-color: var(--panel-bg);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 25px;
+            z-index: 10;
+        }
 
-    h1 {
-      font-size: 28px;
-      margin-bottom: 24px;
-      letter-spacing: 2px;
-    }
+        /* Header */
+        header {
+            border-bottom: 2px solid var(--critical-glow);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
 
-    .section {
-      margin-bottom: 22px;
-    }
+        h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            letter-spacing: 3px;
+            color: #fff;
+            text-transform: uppercase;
+        }
 
-    .section h2 {
-      font-size: 13px;
-      color: #aaa;
-      margin-bottom: 6px;
-      text-transform: uppercase;
-    }
+        .subtitle {
+            font-family: var(--mono-stack);
+            font-size: 0.75rem;
+            color: var(--critical-glow);
+            margin-top: 5px;
+            display: block;
+        }
 
-    .section input {
-      width: 100%;
-      padding: 10px;
-      background: #111;
-      border: 1px solid #333;
-      color: #fff;
-    }
+        /* Data Modules */
+        .data-module {
+            margin-bottom: 30px;
+        }
 
-    .critical {
-      color: #ff3b3b;
-      font-weight: bold;
-    }
+        .label {
+            font-family: var(--mono-stack);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 5px;
+        }
 
-    ul {
-      padding-left: 18px;
-    }
+        .value {
+            font-size: 1.2rem;
+            color: #fff;
+            font-weight: 300;
+        }
 
-    li {
-      margin-bottom: 6px;
-      font-size: 14px;
-    }
+        .value.critical { color: var(--critical-glow); font-weight: bold; }
+        
+        /* Event Log */
+        #event-log {
+            flex: 1;
+            overflow-y: hidden; /* Static for demo */
+        }
 
-    @media (max-width: 900px) {
-      .app {
-        flex-direction: column;
-      }
+        .log-item {
+            font-family: var(--mono-stack);
+            font-size: 0.8rem;
+            padding: 10px 0;
+            border-bottom: 1px solid #1a1a1a;
+            color: #888;
+        }
 
-      .sidebar {
-        width: 100%;
-        height: 40%;
-      }
+        .log-item span { color: #fff; }
+        .log-time { color: var(--active-glow); margin-right: 8px; }
 
-      .map {
-        height: 60%;
-      }
-    }
-  </style>
+        /* Loading State */
+        #loader {
+            position: absolute;
+            color: white;
+            font-family: var(--mono-stack);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body { flex-direction: column; height: auto; overflow: auto; }
+            #viewport { height: 60vh; }
+            #sidebar { width: 100%; border-left: none; border-top: 1px solid var(--border); }
+        }
+    </style>
 </head>
-
 <body>
 
-<div class="app">
-
-  <!-- HARİTA -->
-  <div class="map">
-
-    <!-- SVG TURKEY MAP (dnomak/svg-turkey-map) -->
-    <!-- Sadece gerekli kısmı gösteriyorum, demo için yeterli -->
-    <svg viewBox="0 0 1000 500">
-
-      <!-- İSTANBUL -->
-      <path id="istanbul" class="province total"
-        d="M120 120 L140 115 L150 125 L140 135 Z" />
-
-      <!-- ANKARA -->
-      <path id="ankara" class="province active"
-        d="M300 200 L330 195 L340 220 L310 225 Z" />
-
-      <!-- İZMİR -->
-      <path id="izmir" class="province total"
-        d="M180 260 L210 255 L220 280 L190 285 Z" />
-
-      <!-- DİĞER İLLER (temsili) -->
-      <path class="province"
-        d="M80 80 L900 80 L900 420 L80 420 Z" />
-
-    </svg>
-
-  </div>
-
-  <!-- SAĞ PANEL -->
-  <aside class="sidebar">
-
-    <h1>REMANANCE</h1>
-
-    <div class="section">
-      <h2>Vatandaş Kodu Arama</h2>
-      <input type="text" placeholder="Vatandaş Kodunu Girin" />
+    <!-- LEFT: MAP VIEWPORT -->
+    <div id="viewport">
+        <div id="loader">INITIALIZING SATELLITE LINK...</div>
+        <div id="map-stage"></div>
+        <div class="overlay-text">LIVE FEED // SECTOR TR-81</div>
     </div>
 
-    <div class="section">
-      <h2>Tehdit Seviyesi</h2>
-      <div class="critical">KRİTİK</div>
+    <!-- RIGHT: INFORMATION PANEL -->
+    <div id="sidebar">
+        <header>
+            <h1>Remanance</h1>
+            <span class="subtitle">Global Outbreak Simulation</span>
+        </header>
+
+        <div class="data-module">
+            <span class="label">Current Threat Level</span>
+            <span class="value critical">CATEGORY 5 (PANDEMIC)</span>
+        </div>
+
+        <div class="data-module">
+            <span class="label">Timeline</span>
+            <span class="value">Day 14 // 08:42 AM</span>
+        </div>
+
+        <div class="data-module">
+            <span class="label">Est. Survivors (Region)</span>
+            <span class="value">68,402,193 <span style="font-size:0.8rem; color:var(--critical-glow);">(-124/sec)</span></span>
+        </div>
+
+        <div class="data-module" id="event-log">
+            <span class="label">Major Events</span>
+            <div class="log-item"><span class="log-time">08:30</span><span style="color:#c0392b">ISTANBUL:</span> Quarantine perimeter breached at Bosphorus Bridge.</div>
+            <div class="log-item"><span class="log-time">08:15</span><span style="color:#f39c12">ANKARA:</span> Civil unrest reported in Kizilay district.</div>
+            <div class="log-item"><span class="log-time">07:45</span><span>IZMIR:</span> Naval blockade established.</div>
+            <div class="log-item"><span class="log-time">06:00</span>System Alert: Bio-hazard detected in Marmara Region.</div>
+        </div>
     </div>
 
-    <div class="section">
-      <h2>Sağ Kalan Nüfus</h2>
-      <div>12,480,000</div>
-    </div>
+    <!-- LOGIC -->
+    <script>
+        // CONFIGURATION
+        // We use a stable raw GitHub link for the SVG to ensure we get 81 provinces without external APIs.
+        // This SVG uses ISO codes (TR-34 for Istanbul, TR-06 for Ankara).
+        const MAP_SOURCE = 'https://raw.githubusercontent.com/djaiss/mapsicon/master/all/tr/vector.svg';
 
-    <div class="section">
-      <h2>Salgın Başlayalı</h2>
-      <div>4 Gün</div>
-    </div>
+        const OUTBREAK_DATA = {
+            'TR-34': 'critical', // Istanbul
+            'TR-06': 'active',   // Ankara
+            // All others default to 'safe'
+        };
 
-    <div class="section">
-      <h2>Son Büyük Olaylar</h2>
-      <ul>
-        <li>İstanbul karantinası başarısız</li>
-        <li>Ankara ile temas kesildi</li>
-        <li>Ege bölgesinde yayılım arttı</li>
-      </ul>
-    </div>
+        // DOM ELEMENTS
+        const mapStage = document.getElementById('map-stage');
+        const loader = document.getElementById('loader');
 
-  </aside>
+        // INITIALIZATION
+        async function init() {
+            try {
+                // 1. Fetch the Map
+                const response = await fetch(MAP_SOURCE);
+                if (!response.ok) throw new Error("Map Signal Lost");
+                const svgText = await response.text();
 
-</div>
+                // 2. Inject SVG
+                mapStage.innerHTML = svgText;
+                
+                // 3. Clean up the SVG (Remove inline styles to allow CSS override)
+                const svgElement = mapStage.querySelector('svg');
+                svgElement.removeAttribute('style');
+                svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
 
+                // 4. Apply Logic to Paths
+                const paths = mapStage.querySelectorAll('path');
+                
+                paths.forEach(path => {
+                    // The SVG uses IDs like 'TR-34'.
+                    const provinceId = path.getAttribute('id');
+                    
+                    if (OUTBREAK_DATA[provinceId] === 'critical') {
+                        path.classList.add('province-critical');
+                    } else if (OUTBREAK_DATA[provinceId] === 'active') {
+                        path.classList.add('province-active');
+                    } else {
+                        path.classList.add('province-safe');
+                    }
+
+                    // Optional: Add tooltip title for debugging/observation
+                    const title = document.createElement('title');
+                    title.textContent = `${provinceId} (Status: ${OUTBREAK_DATA[provinceId] || 'Stable'})`;
+                    path.appendChild(title);
+                });
+
+                loader.style.display = 'none';
+
+            } catch (error) {
+                console.error(error);
+                loader.innerText = "ERROR: CONNECTION FAILED. REFRESH TERMINAL.";
+                loader.style.color = "red";
+            }
+        }
+
+        // Run
+        window.addEventListener('DOMContentLoaded', init);
+
+    </script>
 </body>
 </html>
