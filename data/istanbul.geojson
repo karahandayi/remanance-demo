@@ -1,1 +1,100 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "İstanbul",
+        "level": "province"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [[[ 
+          [28.4,41.4],[29.1,41.55],[29.9,41.25],
+          [29.6,40.7],[28.9,40.7],[28.4,41.4]
+        ]]]
+      }
+    },
+
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Fatih",
+        "level": "district",
+        "status": "TOTAL REMANANCE"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [28.92,41.03],[28.98,41.05],
+          [29.02,41.02],[28.98,41.00],[28.92,41.03]
+        ]]
+      }
+    },
+
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Kadıköy",
+        "level": "district",
+        "status": "ACTIVE REMANANCE"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [29.02,40.99],[29.07,41.02],
+          [29.11,40.99],[29.07,40.96],[29.02,40.99]
+        ]]
+      }
+    },
+
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Beşiktaş",
+        "level": "district",
+        "status": "UNSTABLE ZONE"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [29.00,41.05],[29.04,41.07],
+          [29.07,41.04],[29.03,41.02],[29.00,41.05]
+        ]]
+      }
+    },
+
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Esenyurt",
+        "level": "district",
+        "status": "TOTAL REMANANCE"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [28.65,41.02],[28.72,41.05],
+          [28.78,41.02],[28.72,40.99],[28.65,41.02]
+        ]]
+      }
+    },
+
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Küçükçekmece",
+        "level": "district",
+        "status": "ACTIVE REMANANCE"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [28.76,41.00],[28.82,41.03],
+          [28.88,41.00],[28.82,40.97],[28.76,41.00]
+        ]]
+      }
+    }
+  ]
+}
 
