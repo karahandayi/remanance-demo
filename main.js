@@ -1,28 +1,39 @@
+// ===============================
+// REMANANCE – TURKEY PROVINCES
+// ===============================
+
 const map = L.map("map", {
   zoomControl: false,
   attributionControl: false
-}).setView([39, 35], 6);
+});
 
+// Dark base map
 L.tileLayer(
   "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
   { maxZoom: 19 }
 ).addTo(map);
 
-// İL DURUMLARI
-const statusMap = {
-  istanbul: { color: "#7a0000", status: "TOTAL REMANANCE" },
-  ankara:   { color: "#ff7a00", status: "ACTIVE REMANANCE" },
-  izmir:    { color: "#7a0000", status: "TOTAL REMANANCE" }
+// ===============================
+// STATUS DEFINITIONS
+// ===============================
+
+const STATUS = {
+  istanbul: { color: "#7a0000", label: "TOTAL REMANANCE" },
+  ankara:   { color: "#ff7a00", label: "ACTIVE REMANANCE" },
+  izmir:    { color: "#7a0000", label: "TOTAL REMANANCE" }
 };
 
-const DEFAULT = {
+const DEFAULT_STATUS = {
   color: "#2ecc71",
-  status: "CONTROLLED"
+  label: "CONTROLLED"
 };
 
-// Türkçe karakter normalize
-function normalize(str) {
-  return str
+// ===============================
+// HELPERS
+// ===============================
+
+function normalize(text) {
+  return text
     .toLowerCase()
     .replace(/ı/g, "i")
     .replace(/ğ/g, "g")
@@ -32,34 +43,43 @@ function normalize(str) {
     .replace(/ç/g, "c");
 }
 
-// LOCAL GEOJSON
-fetch("data/turkey-provinces.geojson")
-  .then(r => r.json())
+// ===============================
+// LOAD PROVINCES (LOCAL FILE)
+// ===============================
+
+fetch("data/tr-cities.json")
+  .then(res => res.json())
   .then(data => {
 
-    L.geoJSON(data, {
+    const layer = L.geoJSON(data, {
       style: feature => {
         const rawName = feature.properties.name;
         const key = normalize(rawName);
-        const cfg = statusMap[key] || DEFAULT;
+        const cfg = STATUS[key] || DEFAULT_STATUS;
 
         return {
           fillColor: cfg.color,
           fillOpacity: 0.7,
           color: cfg.color,
-          weight: 0.5
+          weight: 0.6
         };
       },
       onEachFeature: (feature, layer) => {
         const rawName = feature.properties.name;
         const key = normalize(rawName);
-        const cfg = statusMap[key] || DEFAULT;
+        const cfg = STATUS[key] || DEFAULT_STATUS;
 
         layer.bindPopup(`
           <strong>${rawName}</strong><br>
-          Durum: <b>${cfg.status}</b>
+          Durum: <b>${cfg.label}</b>
         `);
       }
     }).addTo(map);
 
+    // 🔥 HARİTAYI TÜRKİYE’YE OTURT
+    map.fitBounds(layer.getBounds());
+
+  })
+  .catch(err => {
+    console.error("GeoJSON yüklenemedi:", err);
   });
