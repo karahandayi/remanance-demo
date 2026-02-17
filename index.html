@@ -2,77 +2,204 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
+  <title>REMANANCE – Simulation Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>REMANENCE</title>
 
-  <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet/dist/leaflet.css"
-  />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
 
-  <link rel="stylesheet" href="style.css" />
+    body {
+      background: #000;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    .app {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* HARİTA ALANI */
+    .map {
+      flex: 1;
+      background: radial-gradient(
+        circle at center,
+        #1a1a1a 0%,
+        #0b0b0b 65%,
+        #000 100%
+      );
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* SVG */
+    svg {
+      width: 90%;
+      height: 90%;
+    }
+
+    /* TÜM İLLER */
+    .province {
+      fill: #2ecc71;          /* kontrollü */
+      stroke: #111;
+      stroke-width: 0.5;
+      transition: fill 0.3s ease;
+      cursor: pointer;
+    }
+
+    /* DURUMLAR */
+    .total {
+      fill: #7a0000;          /* total remanance */
+    }
+
+    .active {
+      fill: #ff7a00;          /* active */
+    }
+
+    .province:hover {
+      fill: #aaaaaa;
+    }
+
+    /* SAĞ PANEL */
+    .sidebar {
+      width: 360px;
+      background: linear-gradient(180deg, #0b0b0b, #000);
+      padding: 24px;
+      border-left: 1px solid #222;
+      overflow-y: auto;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 24px;
+      letter-spacing: 2px;
+    }
+
+    .section {
+      margin-bottom: 22px;
+    }
+
+    .section h2 {
+      font-size: 13px;
+      color: #aaa;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .section input {
+      width: 100%;
+      padding: 10px;
+      background: #111;
+      border: 1px solid #333;
+      color: #fff;
+    }
+
+    .critical {
+      color: #ff3b3b;
+      font-weight: bold;
+    }
+
+    ul {
+      padding-left: 18px;
+    }
+
+    li {
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        height: 40%;
+      }
+
+      .map {
+        height: 60%;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-  <!-- ANA KONTEYNER -->
-  <div class="app">
+<div class="app">
 
-    <!-- HARİTA ALANI -->
-    <div id="map"></div>
+  <!-- HARİTA -->
+  <div class="map">
 
-    <!-- SAĞ PANEL -->
-    <aside class="sidebar">
+    <!-- SVG TURKEY MAP (dnomak/svg-turkey-map) -->
+    <!-- Sadece gerekli kısmı gösteriyorum, demo için yeterli -->
+    <svg viewBox="0 0 1000 500">
 
-      <!-- LOGO / BAŞLIK -->
-      <header class="header">
-        <h1>REMANENCE</h1>
-      </header>
+      <!-- İSTANBUL -->
+      <path id="istanbul" class="province total"
+        d="M120 120 L140 115 L150 125 L140 135 Z" />
 
-      <!-- VATANDAŞ KODU -->
-      <section class="panel-section">
-        <h2>Vatandaş Kodu Arama</h2>
-        <input
-          type="text"
-          placeholder="Vatandaş Kodunu Girin"
-        />
-      </section>
+      <!-- ANKARA -->
+      <path id="ankara" class="province active"
+        d="M300 200 L330 195 L340 220 L310 225 Z" />
 
-      <!-- TEHDİT SEVİYESİ -->
-      <section class="panel-section">
-        <h2>Tehdit Seviyesi</h2>
-        <p class="critical">KRİTİK</p>
-      </section>
+      <!-- İZMİR -->
+      <path id="izmir" class="province total"
+        d="M180 260 L210 255 L220 280 L190 285 Z" />
 
-      <!-- NÜFUS -->
-      <section class="panel-section">
-        <h2>Sağ Kalan Nüfus</h2>
-        <p>12,480,000</p>
-      </section>
+      <!-- DİĞER İLLER (temsili) -->
+      <path class="province"
+        d="M80 80 L900 80 L900 420 L80 420 Z" />
 
-      <!-- SALGIN SÜRESİ -->
-      <section class="panel-section">
-        <h2>Salgın Başlayalı</h2>
-        <p>4 Gün</p>
-      </section>
+    </svg>
 
-      <!-- SON OLAYLAR -->
-      <section class="panel-section">
-        <h2>Son Büyük Olaylar</h2>
-        <ul>
-          <li>İstanbul karantinası başarısız</li>
-          <li>Ankara ile temas kesildi</li>
-          <li>Doğu sınırı ele geçirildi</li>
-        </ul>
-      </section>
-
-    </aside>
   </div>
 
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="main.js"></script>
+  <!-- SAĞ PANEL -->
+  <aside class="sidebar">
+
+    <h1>REMANANCE</h1>
+
+    <div class="section">
+      <h2>Vatandaş Kodu Arama</h2>
+      <input type="text" placeholder="Vatandaş Kodunu Girin" />
+    </div>
+
+    <div class="section">
+      <h2>Tehdit Seviyesi</h2>
+      <div class="critical">KRİTİK</div>
+    </div>
+
+    <div class="section">
+      <h2>Sağ Kalan Nüfus</h2>
+      <div>12,480,000</div>
+    </div>
+
+    <div class="section">
+      <h2>Salgın Başlayalı</h2>
+      <div>4 Gün</div>
+    </div>
+
+    <div class="section">
+      <h2>Son Büyük Olaylar</h2>
+      <ul>
+        <li>İstanbul karantinası başarısız</li>
+        <li>Ankara ile temas kesildi</li>
+        <li>Ege bölgesinde yayılım arttı</li>
+      </ul>
+    </div>
+
+  </aside>
+
+</div>
 
 </body>
 </html>
-
