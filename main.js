@@ -1,5 +1,5 @@
 // ===============================
-// REMANENCE – TURKEY (GADM FIXED)
+// REMANENCE – TURKEY (FINAL FIX)
 // ===============================
 
 const map = L.map("map", {
@@ -14,10 +14,9 @@ L.tileLayer(
 ).addTo(map);
 
 // ===============================
-// UTILS
+// NAME NORMALIZATION
 // ===============================
 
-// Türkçe karakter normalize (İ → I, ı → i vs.)
 function normalizeName(str) {
   return str
     .toLowerCase()
@@ -46,7 +45,7 @@ const DEFAULT_STATUS = {
 };
 
 // ===============================
-// LOAD GADM LEVEL-1 (REAL BORDERS)
+// LOAD GADM (REAL BORDERS)
 // ===============================
 
 fetch("https://raw.githubusercontent.com/geodata/gadm-data/master/geojson/gadm41_TUR_1.json")
@@ -60,8 +59,8 @@ fetch("https://raw.githubusercontent.com/geodata/gadm-data/master/geojson/gadm41
         const cfg = provinceStatus[key] || DEFAULT_STATUS;
 
         return {
-          color: "transparent",   // sınır çizgisi yok
-          weight: 0,
+          color: cfg.color,      // sınır rengi = dolgu rengi
+          weight: 0.2,           // pratikte görünmez
           fillColor: cfg.color,
           fillOpacity: 0.65
         };
