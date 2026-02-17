@@ -5,7 +5,7 @@
 const map = L.map("map", {
   zoomControl: false,
   attributionControl: false
-}).setView([41.05, 29.0], 9);
+}).setView([41.03, 28.95], 10);
 
 // ===============================
 // DARK MAP TILE
@@ -13,62 +13,138 @@ const map = L.map("map", {
 
 L.tileLayer(
   "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-  {
-    maxZoom: 19
-  }
+  { maxZoom: 19 }
 ).addTo(map);
 
 // ===============================
-// ISTANBUL PROVINCE (REAL, SIMPLIFIED)
-// Source: GADM / Natural Earth (simplified)
+// ISTANBUL PROVINCE (BACKGROUND)
 // ===============================
 
 const istanbulProvince = {
-  "type": "Feature",
-  "properties": {
-    "name": "İstanbul",
-    "status": "TOTAL REMANANCE"
+  type: "Feature",
+  properties: {
+    name: "İstanbul",
+    status: "TOTAL REMANANCE"
   },
-  "geometry": {
-    "type": "MultiPolygon",
-    "coordinates": [
-      [
-        [
-          [28.475, 41.390],
-          [28.740, 41.515],
-          [29.105, 41.540],
-          [29.435, 41.460],
-          [29.700, 41.260],
-          [29.740, 41.020],
-          [29.520, 40.800],
-          [29.200, 40.720],
-          [28.880, 40.740],
-          [28.600, 40.880],
-          [28.475, 41.390]
-        ]
-      ]
-    ]
+  geometry: {
+    type: "Polygon",
+    coordinates: [[
+      [28.45, 41.40],
+      [29.10, 41.55],
+      [29.80, 41.25],
+      [29.60, 40.75],
+      [28.90, 40.70],
+      [28.45, 41.40]
+    ]]
   }
 };
 
-// ===============================
-// ADD ISTANBUL PROVINCE
-// ===============================
-
 L.geoJSON(istanbulProvince, {
   style: {
-    color: "#ff3b3b",
+    color: "#ff2e2e",
     weight: 2,
-    fillColor: "#ff3b3b",
-    fillOpacity: 0.4
-  },
-  onEachFeature: function (feature, layer) {
-    layer.bindPopup(`
-      <strong>${feature.properties.name}</strong><br/>
-      Status: <b>${feature.properties.status}</b>
-    `);
+    fillColor: "#ff2e2e",
+    fillOpacity: 0.25
   }
 }).addTo(map);
 
+// ===============================
+// SELECTED DISTRICTS (SIMPLIFIED)
+// ===============================
 
+const districts = [
+  {
+    name: "Fatih",
+    status: "TOTAL REMANANCE",
+    color: "#b30000",
+    coords: [[
+      [28.93, 41.03],
+      [28.98, 41.05],
+      [29.02, 41.02],
+      [28.98, 41.00],
+      [28.93, 41.03]
+    ]]
+  },
+  {
+    name: "Kadıköy",
+    status: "ACTIVE REMANANCE",
+    color: "#ff9900",
+    coords: [[
+      [29.02, 40.99],
+      [29.06, 41.02],
+      [29.10, 40.99],
+      [29.06, 40.96],
+      [29.02, 40.99]
+    ]]
+  },
+  {
+    name: "Beşiktaş",
+    status: "UNSTABLE ZONE",
+    color: "#ffd000",
+    coords: [[
+      [29.00, 41.05],
+      [29.04, 41.07],
+      [29.07, 41.04],
+      [29.03, 41.02],
+      [29.00, 41.05]
+    ]]
+  },
+  {
+    name: "Esenyurt",
+    status: "TOTAL REMANANCE",
+    color: "#8b0000",
+    coords: [[
+      [28.65, 41.02],
+      [28.72, 41.05],
+      [28.78, 41.02],
+      [28.72, 40.99],
+      [28.65, 41.02]
+    ]]
+  },
+  {
+    name: "Küçükçekmece",
+    status: "ACTIVE REMANANCE",
+    color: "#ff6600",
+    coords: [[
+      [28.76, 41.00],
+      [28.82, 41.03],
+      [28.88, 41.00],
+      [28.82, 40.97],
+      [28.76, 41.00]
+    ]]
+  }
+];
 
+// ===============================
+// DRAW DISTRICTS
+// ===============================
+
+districts.forEach(district => {
+  L.geoJSON(
+    {
+      type: "Feature",
+      properties: {
+        name: district.name,
+        status: district.status
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: [district.coords]
+      }
+    },
+    {
+      style: {
+        color: district.color,
+        weight: 2,
+        fillColor: district.color,
+        fillOpacity: 0.55
+      },
+      onEachFeature: (feature, layer) => {
+        layer.bindPopup(`
+          <strong>${feature.properties.name}</strong><br/>
+          Status: <b>${feature.properties.status}</b>
+        `);
+      }
+    }
+  ).addTo(map);
+});
