@@ -1,5 +1,5 @@
 // ===============================
-// REMANENCE – TURKEY MAP (PRO)
+// REMANENCE – TURKEY (GADM ONLY)
 // ===============================
 
 const map = L.map("map", {
@@ -14,68 +14,49 @@ L.tileLayer(
 ).addTo(map);
 
 // ===============================
-// STATUS & COLORS
+// STATUS DEFINITIONS
 // ===============================
 
-const focusProvinces = {
-  "Istanbul": { status: "TOTAL REMANANCE", color: "#8b0000" },
+const provinceStatus = {
+  "İstanbul": { status: "TOTAL REMANANCE", color: "#7a0000" },
   "Ankara":   { status: "ACTIVE REMANANCE", color: "#ff7a00" },
-  "Izmir":    { status: "TOTAL REMANANCE", color: "#8b0000" }
+  "İzmir":    { status: "TOTAL REMANANCE", color: "#7a0000" }
 };
 
-const CONTROLLED_COLOR = "#2ecc71";
+const DEFAULT_STATUS = {
+  status: "CONTROLLED",
+  color: "#2ecc71"
+};
 
 // ===============================
-// 1) BASE LAYER – ALL TURKEY (LIGHT)
-// ===============================
-
-fetch("https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_1_states_provinces.geojson")
-  .then(res => res.json())
-  .then(data => {
-
-    const turkey = data.features.filter(
-      f => f.properties.admin === "Turkey"
-    );
-
-    L.geoJSON(turkey, {
-      style: {
-        color: "#444",
-        weight: 0.8,
-        fillColor: CONTROLLED_COLOR,
-        fillOpacity: 0.45
-      }
-    }).addTo(map);
-  });
-
-// ===============================
-// 2) HIGH DETAIL LAYER – 3 PROVINCES
-// Source: GADM Level-1 (much sharper)
+// LOAD GADM LEVEL-1 (REAL BORDERS)
 // ===============================
 
 fetch("https://raw.githubusercontent.com/geodata/gadm-data/master/geojson/gadm41_TUR_1.json")
   .then(res => res.json())
   .then(data => {
 
-    data.features.forEach(feature => {
-      const name = feature.properties.NAME_1;
+    L.geoJSON(data, {
+      style: feature => {
+        const name = feature.properties.NAME_1;
+        const cfg = provinceStatus[name] || DEFAULT_STATUS;
 
-      if (focusProvinces[name]) {
-        const cfg = focusProvinces[name];
+        return {
+          color: "transparent",   // ❌ beyaz sınır YOK
+          weight: 0,
+          fillColor: cfg.color,
+          fillOpacity: 0.65
+        };
+      },
+      onEachFeature: (feature, layer) => {
+        const name = feature.properties.NAME_1;
+        const cfg = provinceStatus[name] || DEFAULT_STATUS;
 
-        L.geoJSON(feature, {
-          style: {
-            color: "#ffffff",          // keskin sınır
-            weight: 2.8,               // kalın çizgi
-            fillColor: cfg.color,
-            fillOpacity: 0.85          // çok baskın
-          },
-          onEachFeature: (f, layer) => {
-            layer.bindPopup(`
-              <strong>${name}</strong><br/>
-              Status: <b>${cfg.status}</b>
-            `);
-          }
-        }).addTo(map);
+        layer.bindPopup(`
+          <strong>${name}</strong><br/>
+          Status: <b>${cfg.status}</b>
+        `);
       }
-    });
+    }).addTo(map);
+
   });
