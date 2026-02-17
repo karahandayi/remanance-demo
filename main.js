@@ -1,47 +1,66 @@
+// ===============================
+// REMANANCE – TURKEY PROVINCES
+// ===============================
+
 const map = L.map("map", {
   zoomControl: false,
   attributionControl: false
-}).setView([41.03, 28.95], 10);
+}).setView([39.0, 35.0], 6);
 
+// Dark basemap
 L.tileLayer(
   "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
   { maxZoom: 19 }
 ).addTo(map);
 
-// STATUS COLOR MAP
+// Example province status map (demo logic)
+const provinceStatus = {
+  "Istanbul": "TOTAL REMANANCE",
+  "Ankara": "ACTIVE REMANANCE",
+  "Izmir": "STABLE ZONE"
+};
+
 const statusColors = {
   "TOTAL REMANANCE": "#8b0000",
   "ACTIVE REMANANCE": "#ff6600",
-  "UNSTABLE ZONE": "#ffd000"
+  "STABLE ZONE": "#2ecc71",
+  "DEFAULT": "#444"
 };
 
-// LOAD GEOJSON
-fetch("data/istanbul.geojson")
+// Load REAL Turkey provinces (Natural Earth Admin-1)
+fetch("https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_1_states_provinces.geojson")
   .then(res => res.json())
   .then(data => {
-    L.geoJSON(data, {
+
+    const turkeyOnly = {
+      type: "FeatureCollection",
+      features: data.features.filter(
+        f => f.properties.admin === "Turkey"
+      )
+    };
+
+    L.geoJSON(turkeyOnly, {
       style: feature => {
-        if (feature.properties.level === "province") {
-          return {
-            color: "#ff2e2e",
-            weight: 2,
-            fillColor: "#ff2e2e",
-            fillOpacity: 0.25
-          };
-        }
+        const name = feature.properties.name;
+        const status = provinceStatus[name] || "DEFAULT";
+        const color = statusColors[status];
 
         return {
-          color: statusColors[feature.properties.status] || "#999",
-          weight: 2,
-          fillColor: statusColors[feature.properties.status] || "#999",
-          fillOpacity: 0.55
+          color: color,
+          weight: 1,
+          fillColor: color,
+          fillOpacity: 0.45
         };
       },
       onEachFeature: (feature, layer) => {
-        layer.bindPopup(
-          `<strong>${feature.properties.name}</strong><br>
-           Status: ${feature.properties.status || "TOTAL REMANANCE"}`
-        );
+        const name = feature.properties.name;
+        const status = provinceStatus[name] || "NO DATA";
+
+        layer.bindPopup(`
+          <strong>${name}</strong><br>
+          Status: <b>${status}</b>
+        `);
       }
     }).addTo(map);
+
   });
