@@ -1,298 +1,312 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>REMANANCE | TR-81 OUTBREAK MONITOR</title>
+    <title>REMANANCE | TR-81 SALGIN TAKİP SİSTEMİ</title>
     <style>
-        /* --- CORE VISUALS (CINEMATIC/DOCUMENTARY) --- */
+        /* --- MODERN RESET & TEMEL AYARLAR --- */
         :root {
-            --bg-void: #050505;
-            --panel-bg: #0f0f0f;
-            --text-main: #b0b0b0;
-            --text-muted: #555;
-            --border: #222;
+            /* Renk Paleti (Modern, Ciddi, Düşük Doygunluk) */
+            --bg-body: #050505;       /* Derin Siyah */
+            --bg-panel: #0a0a0a;      /* Panel Arkaplanı */
+            --border-color: #262626;  /* İnce Ayırıcılar */
+            --text-primary: #e5e5e5;  /* Ana Metin */
+            --text-secondary: #888888;/* Alt Metin */
             
-            /* Status Colors */
-            --safe: #1a3a2a;      /* Deep Muted Green */
-            --safe-glow: #2ecc71; 
-            --active: #7d4e00;    /* Deep Muted Orange */
-            --active-glow: #f39c12;
-            --critical: #5a0b0b;  /* Deep Muted Red */
-            --critical-glow: #c0392b;
+            /* Durum Renkleri */
+            --status-safe: #15803d;   /* Kontrollü (Yeşil) */
+            --status-warn: #b45309;   /* Aktif (Turuncu) */
+            --status-crit: #b91c1c;   /* Kritik (Kırmızı) */
             
-            --font-stack: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif;
-            --mono-stack: 'Courier New', Courier, monospace;
+            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
-        * { box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-void);
-            color: var(--text-main);
-            font-family: var(--font-stack);
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            font-family: var(--font-main);
             height: 100vh;
-            overflow: hidden; /* Prevent scrolling */
+            overflow: hidden;
             display: flex;
+            flex-direction: row;
         }
 
-        /* --- LEFT: MAP AREA --- */
-        #viewport {
+        /* --- SOL: HARİTA ALANI --- */
+        #map-container {
             flex: 1;
             position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             background: radial-gradient(circle at center, #111 0%, #000 100%);
-        }
-
-        /* The Map Container */
-        #map-stage {
-            width: 90%;
-            height: 90%;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
+            overflow: hidden;
         }
 
-        /* SVG Styling */
+        /* SVG Harita Stilleri */
         svg {
             width: 100%;
             height: 100%;
-            max-height: 80vh;
-            filter: drop-shadow(0 0 20px rgba(0,0,0,1));
+            max-height: 90vh; /* Harita çok taşmasın */
+            filter: drop-shadow(0 0 30px rgba(0,0,0,0.8));
         }
 
         path {
             stroke: #000;
             stroke-width: 0.5px;
-            transition: fill 0.5s ease, opacity 0.3s ease;
-            cursor: default; /* Passive observation */
+            transition: fill 0.3s ease, opacity 0.3s ease;
+            cursor: pointer;
         }
 
-        /* Status Classes Applied via JS */
-        .province-safe { fill: var(--safe); }
-        .province-active { fill: var(--active); }
-        .province-critical { fill: var(--critical); }
-
-        /* Hover Effect (For Search/ID Purposes Only) */
         path:hover {
-            opacity: 0.8;
+            opacity: 0.7;
             stroke: #fff;
             stroke-width: 1px;
         }
 
-        /* Map Overlay Text */
-        .overlay-text {
+        /* Renk Sınıfları (JS ile atanacak) */
+        .fill-safe { fill: #1f2937; } /* Varsayılan koyu gri/yeşilimsi */
+        .fill-active { fill: var(--status-warn); }
+        .fill-critical { fill: var(--status-crit); }
+        /* Safe durumunu biraz daha koyu yapıyoruz ki göz yormasın, hover ile parlasın */
+        .fill-safe { fill: #20352b; } 
+
+        /* --- TOOLTIP (BİLGİ BALONU) --- */
+        #tooltip {
             position: absolute;
-            bottom: 30px;
-            left: 30px;
-            font-family: var(--mono-stack);
-            font-size: 2rem;
-            color: #333;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 4px;
+            background: rgba(10, 10, 10, 0.95);
+            border: 1px solid var(--border-color);
+            padding: 10px 15px;
+            border-radius: 4px;
             pointer-events: none;
-            user-select: none;
+            display: none;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
         }
 
-        /* --- RIGHT: INFO PANEL --- */
+        #tooltip h4 {
+            font-size: 0.9rem;
+            color: #fff;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #tooltip span {
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* --- SAĞ: BİLGİ PANELİ --- */
         #sidebar {
-            width: 350px;
-            background-color: var(--panel-bg);
-            border-left: 1px solid var(--border);
+            width: 400px;
+            background-color: var(--bg-panel);
+            border-left: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
-            padding: 25px;
+            padding: 30px;
             z-index: 10;
         }
 
-        /* Header */
+        /* Panel Başlığı */
         header {
-            border-bottom: 2px solid var(--critical-glow);
-            padding-bottom: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 40px;
         }
-
+        
         h1 {
-            margin: 0;
-            font-size: 1.4rem;
-            letter-spacing: 3px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 2px;
             color: #fff;
-            text-transform: uppercase;
-        }
-
-        .subtitle {
-            font-family: var(--mono-stack);
-            font-size: 0.75rem;
-            color: var(--critical-glow);
-            margin-top: 5px;
-            display: block;
-        }
-
-        /* Data Modules */
-        .data-module {
-            margin-bottom: 30px;
-        }
-
-        .label {
-            font-family: var(--mono-stack);
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            display: block;
             margin-bottom: 5px;
         }
-
-        .value {
-            font-size: 1.2rem;
-            color: #fff;
-            font-weight: 300;
-        }
-
-        .value.critical { color: var(--critical-glow); font-weight: bold; }
         
-        /* Event Log */
-        #event-log {
-            flex: 1;
-            overflow-y: hidden; /* Static for demo */
-        }
-
-        .log-item {
-            font-family: var(--mono-stack);
+        .subtitle {
             font-size: 0.8rem;
-            padding: 10px 0;
-            border-bottom: 1px solid #1a1a1a;
-            color: #888;
+            color: var(--status-crit);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
         }
 
-        .log-item span { color: #fff; }
-        .log-time { color: var(--active-glow); margin-right: 8px; }
+        /* Kartlar ve Bölümler */
+        .section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .section:last-child { border-bottom: none; }
 
-        /* Loading State */
+        .label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Arama Kutusu */
+        .search-box {
+            width: 100%;
+            background: #111;
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 12px;
+            font-family: var(--font-main);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .search-box:focus { border-color: var(--text-secondary); }
+
+        /* Büyük Veriler */
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 300;
+            font-variant-numeric: tabular-nums; /* Sayılar titreme yapmasın */
+        }
+        
+        .stat-value.crit { color: var(--status-crit); font-weight: 600; }
+
+        /* Haber Akışı */
+        #news-feed {
+            height: 250px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        /* Scrollbar Gizleme/İnceltme */
+        #news-feed::-webkit-scrollbar { width: 4px; }
+        #news-feed::-webkit-scrollbar-thumb { background: #333; }
+
+        .news-item {
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: #ccc;
+            border-left: 2px solid transparent;
+            padding-left: 10px;
+        }
+
+        .news-item.alert { border-color: var(--status-crit); }
+        .news-item.warn { border-color: var(--status-warn); }
+        
+        .timestamp {
+            display: block;
+            font-size: 0.7rem;
+            color: #555;
+            margin-bottom: 2px;
+        }
+
+        /* Loader */
         #loader {
             position: absolute;
-            color: white;
-            font-family: var(--mono-stack);
+            color: #444;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
-        /* Responsive */
+        /* Mobil Uyumluluk */
         @media (max-width: 768px) {
-            body { flex-direction: column; height: auto; overflow: auto; }
-            #viewport { height: 60vh; }
-            #sidebar { width: 100%; border-left: none; border-top: 1px solid var(--border); }
+            body { flex-direction: column; overflow-y: auto; height: auto; }
+            #map-container { height: 50vh; }
+            #sidebar { width: 100%; }
         }
     </style>
 </head>
 <body>
 
-    <!-- LEFT: MAP VIEWPORT -->
-    <div id="viewport">
-        <div id="loader">INITIALIZING SATELLITE LINK...</div>
-        <div id="map-stage"></div>
-        <div class="overlay-text">LIVE FEED // SECTOR TR-81</div>
+    <!-- SOL PANEL: HARİTA -->
+    <div id="map-container">
+        <div id="loader">Uydu Bağlantısı Kuruluyor...</div>
+        <!-- SVG buraya yüklenecek -->
+        <div id="map-stage" style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;"></div>
+        
+        <!-- Hover Tooltip -->
+        <div id="tooltip">
+            <h4 id="tt-name">PROVINCE</h4>
+            <span id="tt-status">STATUS</span>
+        </div>
     </div>
 
-    <!-- RIGHT: INFORMATION PANEL -->
-    <div id="sidebar">
+    <!-- SAĞ PANEL: BİLGİ VE KONTROL -->
+    <aside id="sidebar">
         <header>
-            <h1>Remanance</h1>
-            <span class="subtitle">Global Outbreak Simulation</span>
+            <h1>REMANANCE</h1>
+            <span class="subtitle">Küresel Salgın Simülasyonu</span>
         </header>
 
-        <div class="data-module">
-            <span class="label">Current Threat Level</span>
-            <span class="value critical">CATEGORY 5 (PANDEMIC)</span>
+        <!-- Vatandaş Arama -->
+        <div class="section">
+            <span class="label">VATANDAŞ KİMLİK SORGULAMA</span>
+            <input type="text" class="search-box" placeholder="TCKN veya ID giriniz...">
         </div>
 
-        <div class="data-module">
-            <span class="label">Timeline</span>
-            <span class="value">Day 14 // 08:42 AM</span>
+        <!-- Canlı İstatistikler -->
+        <div class="section">
+            <span class="label">SİSTEM DURUMU</span>
+            
+            <div class="stat-row">
+                <div>
+                    <span class="label">TEHDİT SEVİYESİ</span>
+                    <span class="stat-value crit">KRİTİK</span>
+                </div>
+                <div style="text-align: right;">
+                    <span class="label">GEÇEN SÜRE</span>
+                    <span class="stat-value">GÜN 14</span>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <span class="label">BÖLGESEL SAĞKALAN TAHMİNİ</span>
+                <span class="stat-value" id="survivor-count">68,402,193</span>
+                <span style="color: var(--status-crit); font-size: 0.8rem; margin-left: 10px;">▼ (-12/sn)</span>
+            </div>
         </div>
 
-        <div class="data-module">
-            <span class="label">Est. Survivors (Region)</span>
-            <span class="value">68,402,193 <span style="font-size:0.8rem; color:var(--critical-glow);">(-124/sec)</span></span>
+        <!-- Olay Akışı -->
+        <div class="section" style="border-bottom: none; flex: 1; display: flex; flex-direction: column;">
+            <span class="label">SON GELİŞMELER (CANLI)</span>
+            <div id="news-feed">
+                <!-- JS ile doldurulacak -->
+                <div class="news-item alert">
+                    <span class="timestamp">10:42</span>
+                    <strong>İSTANBUL:</strong> Anadolu yakası karantina hattı çöktü. Tüm köprüler trafiğe kapatıldı.
+                </div>
+                <div class="news-item alert">
+                    <span class="timestamp">10:30</span>
+                    <strong>ANKARA:</strong> Kızılay meydanında kontrol kaybedildi. Hükümet yetkilileri tahliye edildi.
+                </div>
+                <div class="news-item warn">
+                    <span class="timestamp">09:15</span>
+                    <strong>İZMİR:</strong> Alsancak liman bölgesinde sivil kargaşa rapor ediliyor.
+                </div>
+                <div class="news-item">
+                    <span class="timestamp">08:00</span>
+                    <strong>GENELKURMAY:</strong> 81 il valiliğine acil durum kodu iletildi. Sokağa çıkma yasağı genişletildi.
+                </div>
+                <div class="news-item">
+                    <span class="timestamp">07:45</span>
+                    <strong>SAĞLIK BAKANLIĞI:</strong> Virüs mutasyon hızı beklenenden %400 daha yüksek.
+                </div>
+            </div>
         </div>
+    </aside>
 
-        <div class="data-module" id="event-log">
-            <span class="label">Major Events</span>
-            <div class="log-item"><span class="log-time">08:30</span><span style="color:#c0392b">ISTANBUL:</span> Quarantine perimeter breached at Bosphorus Bridge.</div>
-            <div class="log-item"><span class="log-time">08:15</span><span style="color:#f39c12">ANKARA:</span> Civil unrest reported in Kizilay district.</div>
-            <div class="log-item"><span class="log-time">07:45</span><span>IZMIR:</span> Naval blockade established.</div>
-            <div class="log-item"><span class="log-time">06:00</span>System Alert: Bio-hazard detected in Marmara Region.</div>
-        </div>
-    </div>
-
-    <!-- LOGIC -->
     <script>
-        // CONFIGURATION
-        // We use a stable raw GitHub link for the SVG to ensure we get 81 provinces without external APIs.
-        // This SVG uses ISO codes (TR-34 for Istanbul, TR-06 for Ankara).
+        // --- AYARLAR ---
         const MAP_SOURCE = 'https://raw.githubusercontent.com/djaiss/mapsicon/master/all/tr/vector.svg';
 
-        const OUTBREAK_DATA = {
-            'TR-34': 'critical', // Istanbul
-            'TR-06': 'active',   // Ankara
-            // All others default to 'safe'
-        };
-
-        // DOM ELEMENTS
-        const mapStage = document.getElementById('map-stage');
-        const loader = document.getElementById('loader');
-
-        // INITIALIZATION
-        async function init() {
-            try {
-                // 1. Fetch the Map
-                const response = await fetch(MAP_SOURCE);
-                if (!response.ok) throw new Error("Map Signal Lost");
-                const svgText = await response.text();
-
-                // 2. Inject SVG
-                mapStage.innerHTML = svgText;
-                
-                // 3. Clean up the SVG (Remove inline styles to allow CSS override)
-                const svgElement = mapStage.querySelector('svg');
-                svgElement.removeAttribute('style');
-                svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-
-                // 4. Apply Logic to Paths
-                const paths = mapStage.querySelectorAll('path');
-                
-                paths.forEach(path => {
-                    // The SVG uses IDs like 'TR-34'.
-                    const provinceId = path.getAttribute('id');
-                    
-                    if (OUTBREAK_DATA[provinceId] === 'critical') {
-                        path.classList.add('province-critical');
-                    } else if (OUTBREAK_DATA[provinceId] === 'active') {
-                        path.classList.add('province-active');
-                    } else {
-                        path.classList.add('province-safe');
-                    }
-
-                    // Optional: Add tooltip title for debugging/observation
-                    const title = document.createElement('title');
-                    title.textContent = `${provinceId} (Status: ${OUTBREAK_DATA[provinceId] || 'Stable'})`;
-                    path.appendChild(title);
-                });
-
-                loader.style.display = 'none';
-
-            } catch (error) {
-                console.error(error);
-                loader.innerText = "ERROR: CONNECTION FAILED. REFRESH TERMINAL.";
-                loader.style.color = "red";
-            }
-        }
-
-        // Run
-        window.addEventListener('DOMContentLoaded', init);
-
-    </script>
-</body>
-</html>
+        // ISO-3166-2 Kodlarına Göre Durum Tanımları
