@@ -19,7 +19,8 @@ L.tileLayer(
 ).addTo(map);
 
 // ===============================
-// ISTANBUL PROVINCE (SIMPLIFIED)
+// ISTANBUL PROVINCE (FIXED GEOJSON)
+// NOTE: GeoJSON = [LONGITUDE, LATITUDE]
 // ===============================
 
 const istanbulProvince = {
@@ -51,7 +52,7 @@ L.geoJSON(istanbulProvince, {
     color: "#ff3b3b",
     weight: 2,
     fillColor: "#ff3b3b",
-    fillOpacity: 0.35
+    fillOpacity: 0.4
   },
   onEachFeature: function (feature, layer) {
     layer.bindPopup(`
