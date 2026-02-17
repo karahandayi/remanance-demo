@@ -5,10 +5,10 @@
 const map = L.map("map", {
   zoomControl: false,
   attributionControl: false
-}).setView([39.0, 35.0], 6);
+}).setView([41.0, 29.0], 9);
 
 // ===============================
-// DARK MAP TILE (CARTO DARK)
+// DARK MAP TILE
 // ===============================
 
 L.tileLayer(
@@ -19,46 +19,44 @@ L.tileLayer(
 ).addTo(map);
 
 // ===============================
-// CITY DATA
+// ISTANBUL PROVINCE (SIMPLIFIED)
 // ===============================
 
-const cities = [
-  {
-    name: "İstanbul",
-    coords: [41.0082, 28.9784],
-    status: "TOTAL REMANANCE",
-    color: "#ff3b3b"
+const istanbulProvince = {
+  "type": "Feature",
+  "properties": {
+    "name": "İstanbul",
+    "status": "TOTAL REMANANCE"
   },
-  {
-    name: "Ankara",
-    coords: [39.9334, 32.8597],
-    status: "ACTIVE REMANANCE",
-    color: "#ffb300"
-  },
-  {
-    name: "İzmir",
-    coords: [38.4237, 27.1428],
-    status: "STABLE ZONE",
-    color: "#2ecc71"
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [[
+      [28.474, 41.396],
+      [29.102, 41.515],
+      [29.632, 41.463],
+      [29.813, 41.201],
+      [29.557, 40.802],
+      [28.923, 40.727],
+      [28.474, 41.396]
+    ]]
   }
-];
+};
 
 // ===============================
-// ADD MARKERS TO MAP
+// ADD ISTANBUL POLYGON
 // ===============================
 
-cities.forEach(city => {
-  const marker = L.circleMarker(city.coords, {
-    radius: 10,
-    fillColor: city.color,
-    color: "#000",
-    weight: 1,
-    opacity: 1,
-    fillOpacity: 0.9
-  }).addTo(map);
-
-  marker.bindPopup(`
-    <strong>${city.name}</strong><br/>
-    Status: <b>${city.status}</b>
-  `);
-});
+L.geoJSON(istanbulProvince, {
+  style: {
+    color: "#ff3b3b",
+    weight: 2,
+    fillColor: "#ff3b3b",
+    fillOpacity: 0.35
+  },
+  onEachFeature: function (feature, layer) {
+    layer.bindPopup(`
+      <strong>${feature.properties.name}</strong><br/>
+      Status: <b>${feature.properties.status}</b>
+    `);
+  }
+}).addTo(map);
