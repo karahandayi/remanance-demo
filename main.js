@@ -1,5 +1,5 @@
 // ===============================
-// REMANENCE - MAP INIT
+// REMANENCE – TURKEY MAP
 // ===============================
 
 const map = L.map("map", {
@@ -14,60 +14,67 @@ L.tileLayer(
 ).addTo(map);
 
 // ===============================
-// PROVINCE STATUS DEFINITIONS
+// STATUS DEFINITIONS
 // ===============================
 
-const provinceStatus = {
+// Özel şehirler
+const focusProvinces = {
   "Istanbul": "TOTAL REMANANCE",
   "Ankara": "ACTIVE REMANANCE",
-  "Izmir": "STABLE ZONE"
+  "Izmir": "TOTAL REMANANCE"
 };
 
-// Status colors
+// Renkler
 const statusColors = {
-  "TOTAL REMANANCE": "#8b0000",   // dark red
-  "ACTIVE REMANANCE": "#ff7a00",  // orange
-  "STABLE ZONE": "#2ecc71",       // green
-  "DEFAULT": "#2ecc71"            // other cities -> green
+  "TOTAL REMANANCE": "#8b0000",   // koyu kırmızı
+  "ACTIVE REMANANCE": "#ff7a00",  // turuncu
+  "CONTROLLED": "#2ecc71"         // yeşil
 };
 
 // ===============================
-// LOAD TURKEY PROVINCES (REAL DATA)
+// LOAD TURKEY PROVINCES
 // ===============================
 
 fetch("https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_1_states_provinces.geojson")
   .then(res => res.json())
   .then(data => {
 
-    const turkey = {
-      type: "FeatureCollection",
-      features: data.features.filter(
-        f => f.properties.admin === "Turkey"
-      )
-    };
+    const turkeyProvinces = data.features.filter(
+      f => f.properties.admin === "Turkey"
+    );
 
-    L.geoJSON(turkey, {
-      style: feature => {
-        const name = feature.properties.name;
-        const status = provinceStatus[name] || "DEFAULT";
-        const color = statusColors[status];
-
-        return {
-          color: "#555",          // border
-          weight: 1,
-          fillColor: color,
-          fillOpacity: 0.55
-        };
-      },
-      onEachFeature: (feature, layer) => {
-        const name = feature.properties.name;
-        const status = provinceStatus[name] || "CONTROLLED";
-
-        layer.bindPopup(`
-          <strong>${name}</strong><br/>
-          Status: <b>${status}</b>
-        `);
+    // 1️⃣ TÜM İLLER – YEŞİL (ARKA KATMAN)
+    L.geoJSON(turkeyProvinces, {
+      style: {
+        color: "#444",
+        weight: 0.8,
+        fillColor: statusColors["CONTROLLED"],
+        fillOpacity: 0.45
       }
     }).addTo(map);
+
+    // 2️⃣ ODAK İLLER – ÜST KATMAN (DAHA DETAYLI HİSSİ)
+    turkeyProvinces.forEach(feature => {
+      const name = feature.properties.name;
+
+      if (focusProvinces[name]) {
+        const status = focusProvinces[name];
+
+        L.geoJSON(feature, {
+          style: {
+            color: "#ffffff",              // daha net sınır
+            weight: 2.2,                   // kalın çizgi
+            fillColor: statusColors[status],
+            fillOpacity: 0.75              // daha baskın
+          },
+          onEachFeature: (f, layer) => {
+            layer.bindPopup(`
+              <strong>${name}</strong><br/>
+              Status: <b>${status}</b>
+            `);
+          }
+        }).addTo(map);
+      }
+    });
 
   });
