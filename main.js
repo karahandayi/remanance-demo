@@ -1,5 +1,5 @@
 // ===============================
-// REMANENCE – TURKEY MAP
+// REMANENCE – TURKEY MAP (PRO)
 // ===============================
 
 const map = L.map("map", {
@@ -14,67 +14,68 @@ L.tileLayer(
 ).addTo(map);
 
 // ===============================
-// STATUS DEFINITIONS
+// STATUS & COLORS
 // ===============================
 
-// Özel şehirler
 const focusProvinces = {
-  "Istanbul": "TOTAL REMANANCE",
-  "Ankara": "ACTIVE REMANANCE",
-  "Izmir": "TOTAL REMANANCE"
+  "Istanbul": { status: "TOTAL REMANANCE", color: "#8b0000" },
+  "Ankara":   { status: "ACTIVE REMANANCE", color: "#ff7a00" },
+  "Izmir":    { status: "TOTAL REMANANCE", color: "#8b0000" }
 };
 
-// Renkler
-const statusColors = {
-  "TOTAL REMANANCE": "#8b0000",   // koyu kırmızı
-  "ACTIVE REMANANCE": "#ff7a00",  // turuncu
-  "CONTROLLED": "#2ecc71"         // yeşil
-};
+const CONTROLLED_COLOR = "#2ecc71";
 
 // ===============================
-// LOAD TURKEY PROVINCES
+// 1) BASE LAYER – ALL TURKEY (LIGHT)
 // ===============================
 
 fetch("https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_1_states_provinces.geojson")
   .then(res => res.json())
   .then(data => {
 
-    const turkeyProvinces = data.features.filter(
+    const turkey = data.features.filter(
       f => f.properties.admin === "Turkey"
     );
 
-    // 1️⃣ TÜM İLLER – YEŞİL (ARKA KATMAN)
-    L.geoJSON(turkeyProvinces, {
+    L.geoJSON(turkey, {
       style: {
         color: "#444",
         weight: 0.8,
-        fillColor: statusColors["CONTROLLED"],
+        fillColor: CONTROLLED_COLOR,
         fillOpacity: 0.45
       }
     }).addTo(map);
+  });
 
-    // 2️⃣ ODAK İLLER – ÜST KATMAN (DAHA DETAYLI HİSSİ)
-    turkeyProvinces.forEach(feature => {
-      const name = feature.properties.name;
+// ===============================
+// 2) HIGH DETAIL LAYER – 3 PROVINCES
+// Source: GADM Level-1 (much sharper)
+// ===============================
+
+fetch("https://raw.githubusercontent.com/geodata/gadm-data/master/geojson/gadm41_TUR_1.json")
+  .then(res => res.json())
+  .then(data => {
+
+    data.features.forEach(feature => {
+      const name = feature.properties.NAME_1;
 
       if (focusProvinces[name]) {
-        const status = focusProvinces[name];
+        const cfg = focusProvinces[name];
 
         L.geoJSON(feature, {
           style: {
-            color: "#ffffff",              // daha net sınır
-            weight: 2.2,                   // kalın çizgi
-            fillColor: statusColors[status],
-            fillOpacity: 0.75              // daha baskın
+            color: "#ffffff",          // keskin sınır
+            weight: 2.8,               // kalın çizgi
+            fillColor: cfg.color,
+            fillOpacity: 0.85          // çok baskın
           },
           onEachFeature: (f, layer) => {
             layer.bindPopup(`
               <strong>${name}</strong><br/>
-              Status: <b>${status}</b>
+              Status: <b>${cfg.status}</b>
             `);
           }
         }).addTo(map);
       }
     });
-
   });
