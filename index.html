@@ -1,38 +1,106 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <title>REMANANCE</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="data:,">
+  <meta charset="UTF-8" />
+  <title>REMANANCE | Ulusal Durum Haritası</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+  <style>
+    body {
+      margin: 0;
+      background: #050505;
+      color: #eee;
+      font-family: Arial, Helvetica, sans-serif;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #map {
+      flex: 1;
+    }
+
+    #sidebar {
+      width: 360px;
+      background: #0f0f12;
+      border-left: 1px solid #222;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      margin: 0 0 20px 0;
+      font-size: 20px;
+      letter-spacing: 2px;
+    }
+
+    .block {
+      margin-bottom: 25px;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      background: #18181b;
+      border: 1px solid #333;
+      color: #fff;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .status {
+      font-weight: bold;
+    }
+
+    .controlled { color: #22c55e; }
+    .active { color: #f59e0b; }
+    .total { color: #ef4444; }
+    .unknown { color: #666; }
+
+    #news div {
+      font-size: 13px;
+      padding: 6px 0;
+      border-bottom: 1px solid #222;
+    }
+  </style>
 </head>
+
 <body>
 
-<h1>REMANANCE YÜKLENİYOR…</h1>
+  <div id="map"></div>
 
-<svg id="turkey-map" viewBox="0 0 800 400"></svg>
+  <div id="sidebar">
+    <h1>REMANANCE</h1>
 
-<div id="city-info" style="display:none;">
-    <h2 id="cityName"></h2>
-    <p id="cityStatus"></p>
-    <p id="cityPop"></p>
-</div>
+    <div class="block">
+      <strong>Citizen Code</strong>
+      <input id="citizenInput" placeholder="Citizen Code">
+      <button onclick="searchCitizen()">ARA</button>
+      <div id="citizenResult" style="margin-top:10px;"></div>
+    </div>
 
-<div>
-    <input id="citizenInput" placeholder="Citizen Code">
-    <button onclick="searchCitizen()">Ara</button>
-    <div id="citizenResult"></div>
-</div>
+    <div class="block" id="cityPanel" style="display:none;">
+      <strong id="cityName"></strong><br>
+      <span id="cityStatus" class="status"></span><br>
+      <small>Nüfus:</small>
+      <div id="cityPopulation"></div>
+    </div>
 
-<div id="news"></div>
+    <div class="block">
+      <strong>Son Haberler</strong>
+      <div id="news"></div>
+    </div>
+  </div>
 
-<!-- ❗ SADECE BU -->
-<script src="./core.js"></script>
-<script>
-    renderMap();
-    loadNews();
-</script>
-
+  <!-- Leaflet -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>
