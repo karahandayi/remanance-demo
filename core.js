@@ -1,3 +1,5 @@
+console.log("CORE.JS VERSION 2026-02-18 FIXED");
+
 /* ================== VERİ TABANI ================== */
 
 const DEFAULT_CITIES = {
@@ -137,3 +139,4 @@ setInterval(() => {
 
   if (changed) saveCities(cities);
 }, 10000);
+
