@@ -1,0 +1,168 @@
+/* --- REMANANCE VISUAL LANGUAGE SYSTEM (2026) --- */
+:root {
+    --bg-dark: #050505;
+    --bg-panel: #0f0f12;
+    --border: #27272a;
+    --text-main: #e4e4e7;
+    --text-muted: #71717a;
+    
+    /* Status Colors */
+    --status-safe: #059669;    /* Controlled (Green) */
+    --status-active: #d97706;  /* Active Remanance (Orange) */
+    --status-total: #dc2626;   /* Total Remanance (Red) */
+    --status-dead: #3f3f46;    /* Lost/Unknown (Dark Grey) */
+
+    --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: var(--font-stack);
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+}
+
+/* --- LAYOUT --- */
+#main-wrapper {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+#map-section {
+    flex: 1;
+    position: relative;
+    background: radial-gradient(circle at center, #18181b 0%, #000 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+#sidebar {
+    width: 420px;
+    background-color: var(--bg-panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    z-index: 10;
+    box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+}
+
+/* --- MAP STYLING --- */
+svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 0 15px rgba(0,0,0,0.5));
+}
+
+path {
+    fill: #27272a; /* Default Neutral */
+    stroke: #000;
+    stroke-width: 0.5px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+path:hover {
+    opacity: 0.8;
+    stroke: #fff;
+    stroke-width: 1px;
+}
+
+path.status-safe { fill: var(--status-safe); }
+path.status-active { fill: var(--status-active); }
+path.status-total { fill: var(--status-total); }
+path.status-unknown { fill: var(--status-dead); }
+
+path.active-selection {
+    stroke: #fff;
+    stroke-width: 2px;
+    filter: brightness(1.2);
+}
+
+/* --- SIDEBAR COMPONENTS --- */
+h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 20px; text-transform: uppercase; }
+h2 { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+
+.panel-block { margin-bottom: 30px; }
+
+/* Search Input */
+.input-group { position: relative; display: flex; gap: 10px; }
+input, select, button {
+    background: #18181b;
+    border: 1px solid var(--border);
+    color: #fff;
+    padding: 10px;
+    font-family: var(--font-stack);
+    outline: none;
+    font-size: 0.9rem;
+    width: 100%;
+}
+input:focus { border-color: var(--text-muted); }
+
+button {
+    cursor: pointer;
+    text-transform: uppercase;
+    font-weight: bold;
+    background: #27272a;
+    transition: background 0.2s;
+    width: auto;
+}
+button:hover { background: #3f3f46; }
+
+/* Stats Grid */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.stat-card small { display: block; color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; }
+.stat-card strong { display: block; font-size: 1.5rem; font-weight: 300; }
+.stat-card strong.red { color: var(--status-total); }
+
+/* News Feed */
+#news-feed {
+    height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    background: #000;
+    padding: 10px;
+}
+.news-item {
+    font-size: 0.85rem;
+    padding: 8px 0;
+    border-bottom: 1px solid #222;
+    color: #d4d4d8;
+}
+.news-time { color: var(--status-active); font-size: 0.7rem; margin-right: 5px; font-family: monospace; }
+
+/* District List (Pseudo-Zoom) */
+.district-list { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 10px; }
+.district-badge {
+    padding: 5px 8px;
+    font-size: 0.75rem;
+    background: #222;
+    border-left: 3px solid #555;
+}
+.d-safe { border-color: var(--status-safe); }
+.d-active { border-color: var(--status-active); }
+.d-total { border-color: var(--status-total); }
+
+/* Admin Specific */
+.admin-container { padding: 40px; max-width: 900px; margin: 0 auto; overflow-y: auto; height: 100vh; }
+.admin-row { display: flex; gap: 20px; margin-bottom: 20px; align-items: flex-end; }
+
+/* Tooltip */
+#tooltip {
+    position: absolute;
+    background: rgba(0,0,0,0.9);
+    border: 1px solid var(--border);
+    padding: 10px;
+    pointer-events: none;
+    display: none;
+    z-index: 100;
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
