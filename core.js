@@ -138,4 +138,30 @@ setInterval(() => {
   if (changed) saveCities(cities);
 }, 10000);
 
+/* ================== TOOLTIP ================== */
+
+function showTooltip(e, name, status) {
+  const tooltip = document.getElementById("tooltip");
+  if (!tooltip) return;
+
+  tooltip.style.display = "block";
+  tooltip.innerHTML = `<strong>${name}</strong><br>${status.toUpperCase()}`;
+  moveTooltip(e);
+}
+
+function moveTooltip(e) {
+  const tooltip = document.getElementById("tooltip");
+  if (!tooltip) return;
+
+  tooltip.style.left = e.pageX + 15 + "px";
+  tooltip.style.top = e.pageY + 15 + "px";
+}
+
+function hideTooltip() {
+  const tooltip = document.getElementById("tooltip");
+  if (!tooltip) return;
+
+  tooltip.style.display = "none";
+}
+
 
