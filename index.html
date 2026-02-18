@@ -1,82 +1,69 @@
-/* ================== VERİ TABANI ================== */
-const DEFAULT_CITIES = {
-  "34": {name:"İSTANBUL", status:"total", population:15000000},
-  "06": {name:"ANKARA", status:"total", population:5500000},
-  "35": {name:"İZMİR", status:"active", population:4300000}
-};
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>REMANANCE | Canlı Salgın Takibi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-const DEFAULT_NEWS = [
-  {id:1, text:"İstanbul karantinası çöktü"},
-  {id:2, text:"Ankara'da askeri kontrol sağlandı"}
-];
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
 
-function initDB(){
-  if(!localStorage.cities) localStorage.cities = JSON.stringify(DEFAULT_CITIES);
-  if(!localStorage.news) localStorage.news = JSON.stringify(DEFAULT_NEWS);
-  if(!localStorage.citizens) localStorage.citizens = "[]";
-}
-initDB();
+    <!-- Favicon hatasını susturur -->
+    <link rel="icon" href="data:,">
+</head>
+<body>
 
-function getCities(){ return JSON.parse(localStorage.cities); }
-function getNews(){ return JSON.parse(localStorage.news); }
-function getCitizens(){ return JSON.parse(localStorage.citizens); }
+<div id="main-wrapper">
 
-/* ================== HARİTA ================== */
-const PATHS = {
-  "34":"M 180 90 L 240 90 L 230 140 L 170 130 Z",
-  "06":"M 300 130 L 360 130 L 350 190 L 290 180 Z",
-  "35":"M 140 190 L 190 190 L 180 240 L 130 230 Z"
-};
+    <!-- SOL TARAF : HARİTA -->
+    <div id="map-section">
+        <svg id="turkey-map"
+             viewBox="0 0 800 400"
+             xmlns="http://www.w3.org/2000/svg">
+            <!-- Şehirler JS ile çizilecek -->
+        </svg>
 
-function renderMap(){
-  const svg = document.getElementById("turkey-map");
-  svg.innerHTML = "";
+        <!-- Tooltip -->
+        <div id="tooltip"></div>
+    </div>
 
-  const cities = getCities();
+    <!-- SAĞ PANEL -->
+    <aside id="sidebar">
 
-  Object.keys(PATHS).forEach(id=>{
-    const p = document.createElementNS("http://www.w3.org/2000/svg","path");
-    p.setAttribute("d", PATHS[id]);
-    p.classList.add("status-"+cities[id].status);
-    p.onclick = ()=>selectCity(id);
-    svg.appendChild(p);
-  });
-}
+        <h1>REMANANCE</h1>
 
-/* ================== UI ================== */
-function selectCity(id){
-  const c = getCities()[id];
-  document.getElementById("city-info").style.display="block";
-  document.getElementById("cityName").innerText = c.name;
-  document.getElementById("cityStatus").innerText = c.status.toUpperCase();
-  document.getElementById("cityPop").innerText = c.population.toLocaleString();
-}
+        <!-- VATANDAŞ SORGULAMA -->
+        <div class="panel-block">
+            <h2>Citizen Code Sorgulama</h2>
+            <input id="citizenInput" type="text" placeholder="Citizen Code">
+            <button onclick="searchCitizen()">SORGULA</button>
+            <div id="citizenResult" style="margin-top:10px;"></div>
+        </div>
 
-function loadNews(){
-  const box = document.getElementById("news");
-  box.innerHTML="";
-  getNews().forEach(n=>{
-    const d=document.createElement("div");
-    d.className="news-item";
-    d.innerText=n.text;
-    box.appendChild(d);
-  });
-}
+        <!-- ŞEHİR BİLGİSİ -->
+        <div class="panel-block" id="city-info" style="display:none;">
+            <h2 id="cityName"></h2>
+            <p>Durum: <strong id="cityStatus"></strong></p>
+            <p>Sağ Kalan Nüfus: <strong id="cityPop"></strong></p>
+        </div>
 
-function searchCitizen(){
-  const code = document.getElementById("citizenInput").value;
-  const res = document.getElementById("citizenResult");
-  const c = getCitizens().find(x=>x.code===code);
-  res.innerHTML = c ? `${c.name} ${c.surname} – ${c.city}` : "Kayıt bulunamadı";
-}
+        <!-- HABERLER -->
+        <div class="panel-block">
+            <h2>Son Gelişmeler</h2>
+            <div id="news"></div>
+        </div>
 
-/* ================== SİMÜLASYON ================== */
-setInterval(()=>{
-  const cities = getCities();
-  Object.values(cities).forEach(c=>{
-    if(c.status!=="safe"){
-      c.population = Math.max(0, Math.floor(c.population*0.999));
-    }
-  });
-  localStorage.cities = JSON.stringify(cities);
-},10000);
+    </aside>
+</div>
+
+<!-- ❗ TEK VE DOĞRU JS BAĞLANTISI -->
+<script src="./core.js"></script>
+
+<!-- Sayfa açılınca çalışacaklar -->
+<script>
+    renderMap();
+    loadNews();
+</script>
+
+</body>
+</html>
