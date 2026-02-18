@@ -1,4 +1,4 @@
-/* ================== DATABASE ================== */
+/* ================== VERİ TABANI ================== */
 
 const DEFAULT_CITIES = {
   "34": { name: "İSTANBUL", status: "total", population: 15000000 },
@@ -45,7 +45,7 @@ function saveCitizens(list) {
   localStorage.citizens = JSON.stringify(list);
 }
 
-/* ================== MAP DATA ================== */
+/* ================== HARİTA ================== */
 
 const PATHS = {
   "34": "M 180 90 L 240 90 L 230 140 L 170 130 Z",
@@ -55,13 +55,12 @@ const PATHS = {
 
 function renderMap() {
   const svg = document.getElementById("turkey-map");
-  if (!svg) return; // ⬅️ HARİTA YOKSA ÇIK
+  if (!svg) return; // ⬅️ KRİTİK SATIR
 
   svg.innerHTML = "";
   const cities = getCities();
 
   Object.keys(PATHS).forEach(id => {
-    // şehir yoksa oluştur
     if (!cities[id]) {
       cities[id] = {
         name: "BÖLGE " + id,
@@ -70,12 +69,11 @@ function renderMap() {
       };
     }
 
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", PATHS[id]);
-    path.setAttribute("class", "status-" + cities[id].status);
-
-    path.addEventListener("click", () => selectCity(id));
-    svg.appendChild(path);
+    const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    p.setAttribute("d", PATHS[id]);
+    p.setAttribute("class", "status-" + cities[id].status);
+    p.onclick = () => selectCity(id);
+    svg.appendChild(p);
   });
 
   saveCities(cities);
@@ -84,8 +82,7 @@ function renderMap() {
 /* ================== UI ================== */
 
 function selectCity(id) {
-  const cities = getCities();
-  const c = cities[id];
+  const c = getCities()[id];
   if (!c) return;
 
   const panel = document.getElementById("city-info");
@@ -94,7 +91,8 @@ function selectCity(id) {
   panel.style.display = "block";
   document.getElementById("cityName").innerText = c.name;
   document.getElementById("cityStatus").innerText = c.status.toUpperCase();
-  document.getElementById("cityPop").innerText = c.population.toLocaleString("tr-TR");
+  document.getElementById("cityPop").innerText =
+    c.population.toLocaleString("tr-TR");
 }
 
 function loadNews() {
@@ -124,7 +122,7 @@ function searchCitizen() {
     : "Kayıt bulunamadı";
 }
 
-/* ================== SIMULATION ================== */
+/* ================== SİMÜLASYON ================== */
 
 setInterval(() => {
   const cities = getCities();
