@@ -1,190 +1,82 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>REMANANCE | Sivil Takip Sistemi</title>
-<link rel="stylesheet" href="style.css">
-</head>
+/* ================== VERİ TABANI ================== */
+const DEFAULT_CITIES = {
+  "34": {name:"İSTANBUL", status:"total", population:15000000},
+  "06": {name:"ANKARA", status:"total", population:5500000},
+  "35": {name:"İZMİR", status:"active", population:4300000}
+};
 
-<body>
+const DEFAULT_NEWS = [
+  {id:1, text:"İstanbul karantinası çöktü"},
+  {id:2, text:"Ankara'da askeri kontrol sağlandı"}
+];
 
-<div id="main-wrapper">
-
-  <!-- SOL: HARİTA -->
-  <div id="map-section">
-    <div id="map-container"></div>
-    <div id="tooltip"></div>
-  </div>
-
-  <!-- SAĞ: PANEL -->
-  <aside id="sidebar">
-    <h1>Remanance</h1>
-
-    <!-- Citizen Search -->
-    <div class="panel-block">
-      <h2>Vatandaş Durum Sorgulama</h2>
-      <div class="input-group">
-        <input id="citizen-search-input" placeholder="Citizen Code">
-        <button onclick="searchCitizen()">Sorgula</button>
-      </div>
-      <div id="citizen-result" style="display:none; margin-top:10px;"></div>
-    </div>
-
-    <!-- City Panel -->
-    <div class="panel-block" id="city-panel" style="display:none;">
-      <h2 id="panel-city-name"></h2>
-      <div class="stats-grid">
-        <div class="stat-card">
-          <small>Durum</small>
-          <strong id="panel-city-status"></strong>
-        </div>
-        <div class="stat-card">
-          <small>Sağ Kalan</small>
-          <strong id="panel-city-pop"></strong>
-        </div>
-      </div>
-
-      <div style="margin-top:15px;">
-        <small>İlçe Durumları</small>
-        <div id="district-list" class="district-list"></div>
-      </div>
-    </div>
-
-    <!-- News -->
-    <div class="panel-block" style="flex:1;">
-      <h2>Canlı Veri Akışı</h2>
-      <div id="news-feed"></div>
-    </div>
-
-  </aside>
-</div>
-
-<script src="core.js"></script>
-<script>
-/* ====== INIT ====== */
+function initDB(){
+  if(!localStorage.cities) localStorage.cities = JSON.stringify(DEFAULT_CITIES);
+  if(!localStorage.news) localStorage.news = JSON.stringify(DEFAULT_NEWS);
+  if(!localStorage.citizens) localStorage.citizens = "[]";
+}
 initDB();
-loadMap();
-loadNews();
 
-/* ====== MAP ====== */
-function loadMap() {
-  fetch("turkey_adm1.svg")
-    .then(r => r.text())
-    .then(svg => {
-      document.getElementById("map-container").innerHTML = svg;
-      initMapEvents();
-    });
-}
+function getCities(){ return JSON.parse(localStorage.cities); }
+function getNews(){ return JSON.parse(localStorage.news); }
+function getCitizens(){ return JSON.parse(localStorage.citizens); }
 
-function initMapEvents() {
-  document.querySelectorAll("svg path").forEach(p => {
-    const id = p.id;
-    if (!id) return;
+/* ================== HARİTA ================== */
+const PATHS = {
+  "34":"M 180 90 L 240 90 L 230 140 L 170 130 Z",
+  "06":"M 300 130 L 360 130 L 350 190 L 290 180 Z",
+  "35":"M 140 190 L 190 190 L 180 240 L 130 230 Z"
+};
 
-    const data = getCityData(id);
-    p.classList.add(`status-${data.status}`);
+function renderMap(){
+  const svg = document.getElementById("turkey-map");
+  svg.innerHTML = "";
 
-    p.addEventListener("click", () => selectCity(id));
-    p.addEventListener("mouseenter", e => showTooltip(e, data.name, data.status));
-    p.addEventListener("mousemove", moveTooltip);
-    p.addEventListener("mouseleave", hideTooltip);
+  const cities = getCities();
+
+  Object.keys(PATHS).forEach(id=>{
+    const p = document.createElementNS("http://www.w3.org/2000/svg","path");
+    p.setAttribute("d", PATHS[id]);
+    p.classList.add("status-"+cities[id].status);
+    p.onclick = ()=>selectCity(id);
+    svg.appendChild(p);
   });
 }
 
-/* ====== CITY SELECT ====== */
-function selectCity(id) {
-  const data = getCityData(id);
-
-  document.getElementById("city-panel").style.display = "block";
-  document.getElementById("panel-city-name").innerText = data.name;
-  document.getElementById("panel-city-status").innerText = STATUS_LABELS[data.status];
-  document.getElementById("panel-city-pop").innerText =
-    new Intl.NumberFormat("tr-TR").format(data.population);
-
-  const list = document.getElementById("district-list");
-  list.innerHTML = "";
-
-  if (data.districts && data.districts.length) {
-    data.districts.forEach(d => {
-      const el = document.createElement("div");
-      el.className = `district-badge d-${d.status}`;
-      el.innerText = d.name;
-      list.appendChild(el);
-    });
-  } else {
-    list.innerHTML = "<span style='color:#666'>İlçe verisi yok</span>";
-  }
-
-  document.querySelectorAll("path").forEach(p => p.classList.remove("active-selection"));
-  document.getElementById(id)?.classList.add("active-selection");
+/* ================== UI ================== */
+function selectCity(id){
+  const c = getCities()[id];
+  document.getElementById("city-info").style.display="block";
+  document.getElementById("cityName").innerText = c.name;
+  document.getElementById("cityStatus").innerText = c.status.toUpperCase();
+  document.getElementById("cityPop").innerText = c.population.toLocaleString();
 }
 
-/* ====== NEWS ====== */
-function loadNews() {
-  const feed = document.getElementById("news-feed");
-  feed.innerHTML = "";
-  getNews().forEach(n => {
-    const d = document.createElement("div");
-    d.className = "news-item";
-    d.innerHTML = `<span class="news-time">${n.time}</span>${n.text}`;
-    feed.appendChild(d);
+function loadNews(){
+  const box = document.getElementById("news");
+  box.innerHTML="";
+  getNews().forEach(n=>{
+    const d=document.createElement("div");
+    d.className="news-item";
+    d.innerText=n.text;
+    box.appendChild(d);
   });
 }
 
-/* ====== CITIZEN SEARCH ====== */
-function searchCitizen() {
-  const code = document.getElementById("citizen-search-input").value.trim();
-  const box = document.getElementById("citizen-result");
-  const citizen = getCitizens().find(c => c.code === code);
-
-  box.style.display = "block";
-
-  if (!citizen) {
-    box.innerHTML = "<span style='color:#dc2626'>Kayıt bulunamadı</span>";
-    return;
-  }
-
-  box.innerHTML = `
-    <strong>${citizen.name} ${citizen.surname}</strong><br>
-    <small>${citizen.job} | Yaş ${citizen.age}</small><br>
-    <span>Durum: ${citizen.status}</span><br>
-    <small>Son Konum: ${citizen.city}</small>
-  `;
-
-  const map = { "İSTANBUL":"34", "ANKARA":"06", "İZMİR":"35" };
-  if (map[citizen.city]) selectCity(map[citizen.city]);
+function searchCitizen(){
+  const code = document.getElementById("citizenInput").value;
+  const res = document.getElementById("citizenResult");
+  const c = getCitizens().find(x=>x.code===code);
+  res.innerHTML = c ? `${c.name} ${c.surname} – ${c.city}` : "Kayıt bulunamadı";
 }
 
-/* ====== TOOLTIP ====== */
-const tooltip = document.getElementById("tooltip");
-function showTooltip(e, name, status) {
-  tooltip.style.display = "block";
-  tooltip.innerHTML = `<strong>${name}</strong><br>${STATUS_LABELS[status]}`;
-  moveTooltip(e);
-}
-function moveTooltip(e) {
-  tooltip.style.left = e.clientX + 15 + "px";
-  tooltip.style.top = e.clientY + 15 + "px";
-}
-function hideTooltip() {
-  tooltip.style.display = "none";
-}
-  // === CANLI HARİTA GÜNCELLEME ===
-setInterval(() => {
-  document.querySelectorAll("svg path").forEach(p => {
-    const id = p.id;
-    if (!id) return;
-
-    const data = getCityData(id);
-
-    p.classList.remove("status-safe", "status-active", "status-total", "status-unknown");
-    p.classList.add(`status-${data.status}`);
+/* ================== SİMÜLASYON ================== */
+setInterval(()=>{
+  const cities = getCities();
+  Object.values(cities).forEach(c=>{
+    if(c.status!=="safe"){
+      c.population = Math.max(0, Math.floor(c.population*0.999));
+    }
   });
-}, 5000);
-
-</script>
-
-</body>
-</html>
-
+  localStorage.cities = JSON.stringify(cities);
+},10000);
