@@ -2,64 +2,33 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>REMANANCE | Canlı Salgın Takibi</title>
+    <title>REMANANCE</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- CSS -->
     <link rel="stylesheet" href="style.css">
-
-    <!-- Favicon hatasını susturur -->
     <link rel="icon" href="data:,">
 </head>
 <body>
 
-<div id="main-wrapper">
+<h1>REMANANCE YÜKLENİYOR…</h1>
 
-    <!-- SOL TARAF : HARİTA -->
-    <div id="map-section">
-        <svg id="turkey-map"
-             viewBox="0 0 800 400"
-             xmlns="http://www.w3.org/2000/svg">
-            <!-- Şehirler JS ile çizilecek -->
-        </svg>
+<svg id="turkey-map" viewBox="0 0 800 400"></svg>
 
-        <!-- Tooltip -->
-        <div id="tooltip"></div>
-    </div>
-
-    <!-- SAĞ PANEL -->
-    <aside id="sidebar">
-
-        <h1>REMANANCE</h1>
-
-        <!-- VATANDAŞ SORGULAMA -->
-        <div class="panel-block">
-            <h2>Citizen Code Sorgulama</h2>
-            <input id="citizenInput" type="text" placeholder="Citizen Code">
-            <button onclick="searchCitizen()">SORGULA</button>
-            <div id="citizenResult" style="margin-top:10px;"></div>
-        </div>
-
-        <!-- ŞEHİR BİLGİSİ -->
-        <div class="panel-block" id="city-info" style="display:none;">
-            <h2 id="cityName"></h2>
-            <p>Durum: <strong id="cityStatus"></strong></p>
-            <p>Sağ Kalan Nüfus: <strong id="cityPop"></strong></p>
-        </div>
-
-        <!-- HABERLER -->
-        <div class="panel-block">
-            <h2>Son Gelişmeler</h2>
-            <div id="news"></div>
-        </div>
-
-    </aside>
+<div id="city-info" style="display:none;">
+    <h2 id="cityName"></h2>
+    <p id="cityStatus"></p>
+    <p id="cityPop"></p>
 </div>
 
-<!-- ❗ TEK VE DOĞRU JS BAĞLANTISI -->
-<script src="./core.js"></script>
+<div>
+    <input id="citizenInput" placeholder="Citizen Code">
+    <button onclick="searchCitizen()">Ara</button>
+    <div id="citizenResult"></div>
+</div>
 
-<!-- Sayfa açılınca çalışacaklar -->
+<div id="news"></div>
+
+<!-- ❗ SADECE BU -->
+<script src="./core.js"></script>
 <script>
     renderMap();
     loadNews();
