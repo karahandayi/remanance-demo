@@ -1,179 +1,154 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>REMANANCE | SİVİL TAKİP SİSTEMİ</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8" />
+<title>REMANANCE | Türkiye Durum Haritası</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  margin: 0;
+  background: #050505;
+  color: #ddd;
+  font-family: Arial, sans-serif;
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* MAP */
+#map {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* SVG */
+svg path {
+  stroke: #111;
+  stroke-width: 0.6;
+  cursor: pointer;
+  transition: fill 0.2s;
+}
+svg path:hover {
+  opacity: 0.85;
+}
+
+/* STATUS COLORS */
+.controlled { fill: #1a3a2a; }
+.active { fill: #7d4e00; }
+.total { fill: #5a0b0b; }
+
+/* SIDEBAR */
+#sidebar {
+  width: 340px;
+  background: #0f0f0f;
+  padding: 20px;
+  box-sizing: border-box;
+  border-left: 1px solid #222;
+}
+
+h1 {
+  margin: 0 0 10px;
+  color: #fff;
+  font-size: 20px;
+}
+
+.section {
+  margin-bottom: 20px;
+}
+
+.label {
+  font-size: 12px;
+  color: #777;
+}
+
+.value {
+  font-size: 16px;
+  color: #fff;
+}
+
+input {
+  width: 100%;
+  padding: 8px;
+  background: #000;
+  border: 1px solid #333;
+  color: #fff;
+}
+</style>
 </head>
+
 <body>
 
-    <div id="main-wrapper">
-        
-        <!-- SOL: HARİTA -->
-        <div id="map-section">
-            <!-- SVG Koordinat sistemi: 0 0 800 400 -->
-            <svg id="turkey-map" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
-                <!-- Pathler JS ile doldurulacak -->
-                <defs>
-                    <filter id="glow">
-                        <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
-                        <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                    </filter>
-                </defs>
-            </svg>
-            
-            <div id="tooltip"></div>
-        </div>
+<div id="map"></div>
 
-        <!-- SAĞ: BİLGİ PANELİ -->
-        <aside id="sidebar">
-            <h1>Remanance <span style="font-size:0.5em; color:#666;">v2.0.4</span></h1>
+<div id="sidebar">
+  <h1>REMANANCE</h1>
 
-            <!-- 1. Vatandaş Arama -->
-            <div class="panel-block">
-                <h2>Vatandaş Durum Sorgulama</h2>
-                <div class="input-group">
-                    <input type="text" id="citizen-search-input" placeholder="Vatandaş Kodu (Örn: IST-8291)">
-                    <button onclick="searchCitizen()">Sorgula</button>
-                </div>
-                <div id="citizen-result" style="margin-top:10px; font-size: 0.9rem; display:none; padding:10px; background:#111; border:1px solid #333;">
-                    <!-- Sonuçlar buraya -->
-                </div>
-            </div>
+  <div class="section">
+    <div class="label">Citizen Code</div>
+    <input placeholder="Citizen Code Gir" />
+  </div>
 
-            <!-- 2. Şehir Detayları -->
-            <div class="panel-block" id="city-panel" style="display:none;">
-                <h2 id="panel-city-name">İSTANBUL</h2>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <small>Durum</small>
-                        <strong id="panel-city-status" class="red">TOTAL</strong>
-                    </div>
-                    <div class="stat-card">
-                        <small>Tahmini Sağkalan</small>
-                        <strong id="panel-survivors">0</strong>
-                    </div>
-                </div>
-                
-                <div style="margin-top:15px;">
-                    <small style="color:#777; text-transform:uppercase;">İlçe Durumları (Canlı)</small>
-                    <div id="district-list" class="district-list">
-                        <!-- JS ile dolacak -->
-                    </div>
-                </div>
-            </div>
+  <div class="section">
+    <div class="label">Seçili Şehir</div>
+    <div class="value" id="cityName">—</div>
+  </div>
 
-            <!-- 3. Genel Haberler -->
-            <div class="panel-block" style="flex:1; display:flex; flex-direction:column;">
-                <h2>Canlı Veri Akışı</h2>
-                <div id="news-feed">
-                    <!-- JS ile dolacak -->
-                </div>
-            </div>
+  <div class="section">
+    <div class="label">Durum</div>
+    <div class="value" id="cityStatus">—</div>
+  </div>
 
-        </aside>
-    </div>
+  <div class="section">
+    <div class="label">Hayatta Kalan</div>
+    <div class="value" id="cityPop">—</div>
+  </div>
+</div>
 
-    <script src="core.js"></script>
-    <script>
-        // INDEX SAYFASI ÖZEL MANTIĞI
-        
-        // Haritayı Çiz
-        renderMap();
-        loadNews();
+<script>
+// ŞEHİR DURUMLARI
+const cityData = {
+  istanbul: { status: "TOTAL REMANANCE", class: "total", pop: "1.240.000" },
+  ankara:   { status: "TOTAL REMANANCE", class: "total", pop: "840.000" },
+  izmir:    { status: "ACTIVE REMANANCE", class: "active", pop: "620.000" }
+};
 
-        // Haberleri Yükle
-        function loadNews() {
-            const feed = document.getElementById('news-feed');
-            const newsData = getNews();
-            feed.innerHTML = '';
-            newsData.forEach(n => {
-                const div = document.createElement('div');
-                div.className = 'news-item';
-                div.innerHTML = `<span class="news-time">${n.time}</span> ${n.text}`;
-                feed.appendChild(div);
-            });
-        }
+// SVG YÜKLE
+fetch("turkey_adm1.svg")
+  .then(res => res.text())
+  .then(svg => {
+    document.getElementById("map").innerHTML = svg;
+    initMap();
+  });
 
-        // Şehir Seçimi
-        function selectCity(id) {
-            const data = getCityData(id);
-            const panel = document.getElementById('city-panel');
-            const nameEl = document.getElementById('panel-city-name');
-            const statusEl = document.getElementById('panel-city-status');
-            const survEl = document.getElementById('panel-survivors');
-            const districtList = document.getElementById('district-list');
+function initMap() {
+  document.querySelectorAll("svg path").forEach(p => {
+    const id = p.id?.toLowerCase();
+    if (cityData[id]) {
+      p.classList.add(cityData[id].class);
+    } else {
+      p.classList.add("controlled");
+    }
 
-            panel.style.display = 'block';
-            nameEl.innerText = data.name;
-            statusEl.innerText = STATUS_LABELS[data.status];
-            
-            // Renk ayarı
-            statusEl.className = '';
-            if(data.status === 'total') statusEl.classList.add('red');
-            
-            // Sağkalan simülasyonu
-            survEl.innerText = new Intl.NumberFormat('tr-TR').format(data.population);
+    p.addEventListener("click", () => selectCity(id));
+  });
+}
 
-            // İlçe Listesi
-            districtList.innerHTML = '';
-            if (data.districts && data.districts.length > 0) {
-                data.districts.forEach(d => {
-                    const badge = document.createElement('div');
-                    badge.className = `district-badge d-${d.status}`;
-                    badge.innerText = d.name;
-                    districtList.appendChild(badge);
-                });
-            } else {
-                districtList.innerHTML = '<span style="color:#555; font-size:0.8rem;">İlçe verisi bulunamadı.</span>';
-            }
+function selectCity(id) {
+  if (!cityData[id]) {
+    document.getElementById("cityName").innerText = "Bilinmeyen Bölge";
+    document.getElementById("cityStatus").innerText = "CONTROLLED";
+    document.getElementById("cityPop").innerText = "—";
+    return;
+  }
 
-            // Haritada highlight
-            document.querySelectorAll('path').forEach(p => p.classList.remove('active-selection'));
-            document.getElementById(`city-${id}`).classList.add('active-selection');
-        }
+  document.getElementById("cityName").innerText = id.toUpperCase();
+  document.getElementById("cityStatus").innerText = cityData[id].status;
+  document.getElementById("cityPop").innerText = cityData[id].pop;
+}
+</script>
 
-        // Vatandaş Arama
-        function searchCitizen() {
-            const code = document.getElementById('citizen-search-input').value.trim();
-            const resultBox = document.getElementById('citizen-result');
-            const citizens = getCitizens();
-            
-            const found = citizens.find(c => c.code === code);
-            
-            resultBox.style.display = 'block';
-            if (found) {
-                resultBox.innerHTML = `
-                    <strong style="color:#fff;">${found.name} ${found.surname}</strong><br>
-                    <small>Yaş: ${found.age} | Meslek: ${found.job}</small><br>
-                    <hr style="border:0; border-top:1px solid #333; margin:5px 0;">
-                    <span style="color:${found.status === 'Alive' ? '#059669' : '#dc2626'}">Durum: ${found.status === 'Alive' ? 'HAYATTA' : 'KAYIP/ÖLÜ'}</span><br>
-                    <small>Son Konum: ${found.city}</small>
-                `;
-                
-                // Varsa şehri seç
-                const cityMap = {'İSTANBUL':'34', 'ANKARA':'06', 'İZMİR':'35'};
-                if(cityMap[found.city]) selectCity(cityMap[found.city]);
-
-            } else {
-                resultBox.innerHTML = '<span style="color:var(--status-total)">KAYIT BULUNAMADI.</span>';
-            }
-        }
-
-        // Tooltip Mantığı
-        const tooltip = document.getElementById('tooltip');
-        function showTooltip(e, name, status) {
-            tooltip.style.display = 'block';
-            tooltip.innerHTML = `<strong>${name}</strong><br><span style="color:#aaa">${STATUS_LABELS[status]}</span>`;
-            moveTooltip(e);
-        }
-        function moveTooltip(e) {
-            tooltip.style.left = (e.clientX + 15) + 'px';
-            tooltip.style.top = (e.clientY + 15) + 'px';
-        }
-        function hideTooltip() { tooltip.style.display = 'none'; }
-
-    </script>
 </body>
 </html>
