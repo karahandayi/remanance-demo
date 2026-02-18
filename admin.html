@@ -99,12 +99,24 @@
         }
 
         function updateStatus() {
-            const id = document.getElementById('city-select').value;
-            const status = document.getElementById('status-select').value;
-            updateCityStatus(id, status);
-            alert("Bölge durumu güncellendi.");
+  const id = document.getElementById('city-select').value;
+  const status = document.getElementById('status-select').value;
+  const pop = parseInt(document.getElementById('population-input').value);
+
+  const cities = JSON.parse(localStorage.getItem('remanance_cities')) || {};
+
+  if (!cities[id]) cities[id] = { name: `IL-${id}`, population: 100000 };
+
+  cities[id].status = status;
+  if (!isNaN(pop)) cities[id].population = pop;
+
+  localStorage.setItem('remanance_cities', JSON.stringify(cities));
+  alert("Şehir durumu ve nüfus güncellendi");
+}
+
         }
     </script>
 </body>
 
 </html>
+
