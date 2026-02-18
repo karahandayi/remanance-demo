@@ -1,8 +1,9 @@
-/* ========== DATABASE ========== */
+/* ================== DATABASE ================== */
+
 const DEFAULT_CITIES = {
-  "34": { name:"İSTANBUL", status:"total", population:15000000 },
-  "06": { name:"ANKARA", status:"total", population:5500000 },
-  "35": { name:"İZMİR", status:"active", population:4300000 }
+  "34": { name: "İSTANBUL", status: "total", population: 15000000 },
+  "06": { name: "ANKARA", status: "total", population: 5500000 },
+  "35": { name: "İZMİR", status: "active", population: 4300000 }
 };
 
 const DEFAULT_NEWS = [
@@ -10,81 +11,131 @@ const DEFAULT_NEWS = [
   { id: 2, text: "Ankara'da askeri kontrol sağlandı" }
 ];
 
-function initDB(){
-  if(!localStorage.cities) localStorage.cities = JSON.stringify(DEFAULT_CITIES);
-  if(!localStorage.news) localStorage.news = JSON.stringify(DEFAULT_NEWS);
-  if(!localStorage.citizens) localStorage.citizens = "[]";
+function initDB() {
+  if (!localStorage.cities) {
+    localStorage.cities = JSON.stringify(DEFAULT_CITIES);
+  }
+  if (!localStorage.news) {
+    localStorage.news = JSON.stringify(DEFAULT_NEWS);
+  }
+  if (!localStorage.citizens) {
+    localStorage.citizens = JSON.stringify([]);
+  }
 }
 initDB();
 
-function getCities(){ return JSON.parse(localStorage.cities); }
-function saveCities(c){ localStorage.cities = JSON.stringify(c); }
+function getCities() {
+  return JSON.parse(localStorage.cities);
+}
+function saveCities(cities) {
+  localStorage.cities = JSON.stringify(cities);
+}
 
-function getNews(){ return JSON.parse(localStorage.news); }
-function saveNews(n){ localStorage.news = JSON.stringify(n); }
+function getNews() {
+  return JSON.parse(localStorage.news);
+}
+function saveNews(news) {
+  localStorage.news = JSON.stringify(news);
+}
 
-function getCitizens(){ return JSON.parse(localStorage.citizens); }
-function saveCitizens(c){ localStorage.citizens = JSON.stringify(c); }
+function getCitizens() {
+  return JSON.parse(localStorage.citizens);
+}
+function saveCitizens(list) {
+  localStorage.citizens = JSON.stringify(list);
+}
 
-/* ========== MAP PATHS (DEMO) ========== */
+/* ================== MAP DATA ================== */
+
 const PATHS = {
-  "34":"M 180 90 L 240 90 L 230 140 L 170 130 Z",
-  "06":"M 300 130 L 360 130 L 350 190 L 290 180 Z",
-  "35":"M 140 190 L 190 190 L 180 240 L 130 230 Z"
+  "34": "M 180 90 L 240 90 L 230 140 L 170 130 Z",
+  "06": "M 300 130 L 360 130 L 350 190 L 290 180 Z",
+  "35": "M 140 190 L 190 190 L 180 240 L 130 230 Z"
 };
 
-function renderMap(){
+function renderMap() {
   const svg = document.getElementById("turkey-map");
-  if(!svg) return;
+  if (!svg) return; // ⬅️ HARİTA YOKSA ÇIK
+
   svg.innerHTML = "";
   const cities = getCities();
 
-  Object.keys(PATHS).forEach(id=>{
-    const p = document.createElementNS("http://www.w3.org/2000/svg","path");
-    p.setAttribute("d", PATHS[id]);
-    p.setAttribute("class","status-"+cities[id].status);
-    p.onclick = ()=>selectCity(id);
-    svg.appendChild(p);
+  Object.keys(PATHS).forEach(id => {
+    // şehir yoksa oluştur
+    if (!cities[id]) {
+      cities[id] = {
+        name: "BÖLGE " + id,
+        status: "safe",
+        population: 500000
+      };
+    }
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", PATHS[id]);
+    path.setAttribute("class", "status-" + cities[id].status);
+
+    path.addEventListener("click", () => selectCity(id));
+    svg.appendChild(path);
   });
+
+  saveCities(cities);
 }
 
-/* ========== UI ========== */
-function selectCity(id){
-  const c = getCities()[id];
-  document.getElementById("city-info").style.display="block";
+/* ================== UI ================== */
+
+function selectCity(id) {
+  const cities = getCities();
+  const c = cities[id];
+  if (!c) return;
+
+  const panel = document.getElementById("city-info");
+  if (!panel) return;
+
+  panel.style.display = "block";
   document.getElementById("cityName").innerText = c.name;
   document.getElementById("cityStatus").innerText = c.status.toUpperCase();
-  document.getElementById("cityPop").innerText = c.population.toLocaleString();
+  document.getElementById("cityPop").innerText = c.population.toLocaleString("tr-TR");
 }
 
-function loadNews(){
+function loadNews() {
   const box = document.getElementById("news");
-  if(!box) return;
-  box.innerHTML="";
-  getNews().forEach(n=>{
-    const d=document.createElement("div");
-    d.className="news-item";
-    d.innerText=n.text;
+  if (!box) return;
+
+  box.innerHTML = "";
+  getNews().forEach(n => {
+    const d = document.createElement("div");
+    d.className = "news-item";
+    d.innerText = n.text;
     box.appendChild(d);
   });
 }
 
-function searchCitizen(){
-  const code = document.getElementById("citizenInput").value;
-  const res = document.getElementById("citizenResult");
-  const c = getCitizens().find(x=>x.code===code);
-  res.innerHTML = c
-    ? `${c.name} ${c.surname} – ${c.city}`
+function searchCitizen() {
+  const input = document.getElementById("citizenInput");
+  const result = document.getElementById("citizenResult");
+  if (!input || !result) return;
+
+  const code = input.value.trim();
+  const citizens = getCitizens();
+  const found = citizens.find(c => c.code === code);
+
+  result.innerHTML = found
+    ? `${found.name} ${found.surname} – ${found.city}`
     : "Kayıt bulunamadı";
 }
 
-/* ========== SIMULATION ========== */
-setInterval(()=>{
+/* ================== SIMULATION ================== */
+
+setInterval(() => {
   const cities = getCities();
-  Object.values(cities).forEach(c=>{
-    if(c.status!=="safe"){
-      c.population = Math.max(0, Math.floor(c.population*0.999));
+  let changed = false;
+
+  Object.values(cities).forEach(c => {
+    if (c.status !== "safe" && c.population > 0) {
+      c.population = Math.max(0, Math.floor(c.population * 0.999));
+      changed = true;
     }
   });
-  saveCities(cities);
-},10000);
+
+  if (changed) saveCities(cities);
+}, 10000);
