@@ -139,4 +139,22 @@ const STATUS_LABELS = {
     'unknown': 'VERİ YOK'
 };
 
+// === NÜFUS SİMÜLASYONU ===
+setInterval(() => {
+  const cities = JSON.parse(localStorage.getItem('remanance_cities')) || {};
+
+  Object.keys(cities).forEach(id => {
+    const city = cities[id];
+
+    if (city.status === 'active' || city.status === 'total') {
+      city.population = Math.max(
+        0,
+        Math.floor(city.population * 0.9995)
+      );
+    }
+  });
+
+  localStorage.setItem('remanance_cities', JSON.stringify(cities));
+}, 10000);
+
 initDB(); // Başlat
