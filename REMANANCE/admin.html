@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>REMANANCE | ADMIN PANEL</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body style="background:#000;">
+
+    <div class="admin-container">
+        <h1>Sistem Yönetim Paneli</h1>
+        <p style="color:#777; margin-bottom:30px;">Değişiklikler anında canlı sisteme yansır (LocalStorage).</p>
+
+        <!-- 1. HABER EKLEME -->
+        <div class="panel-block" style="border:1px solid #333; padding:20px;">
+            <h2>Acil Durum Mesajı Yayınla</h2>
+            <div class="input-group">
+                <input type="text" id="news-input" placeholder="Haber metnini girin...">
+                <button onclick="postNews()">YAYINLA</button>
+            </div>
+        </div>
+
+        <!-- 2. VATANDAŞ OLUŞTURMA -->
+        <div class="panel-block" style="border:1px solid #333; padding:20px;">
+            <h2>Yeni Vatandaş Kaydı</h2>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
+                <input type="text" id="c-name" placeholder="İsim">
+                <input type="text" id="c-surname" placeholder="Soyisim">
+                <input type="number" id="c-age" placeholder="Yaş">
+                <input type="text" id="c-job" placeholder="Meslek">
+                <select id="c-city">
+                    <option value="İSTANBUL">İSTANBUL</option>
+                    <option value="ANKARA">ANKARA</option>
+                    <option value="İZMİR">İZMİR</option>
+                </select>
+                <select id="c-status">
+                    <option value="Alive">Hayatta</option>
+                    <option value="Infected">Enfekte</option>
+                    <option value="Dead">Ölü</option>
+                </select>
+            </div>
+            <button onclick="createCitizen()" style="width:100%;">KAYIT OLUŞTUR & KOD ÜRET</button>
+            <div id="generated-code" style="margin-top:10px; color:#059669; font-weight:bold;"></div>
+        </div>
+
+        <!-- 3. ŞEHİR DURUMU DEĞİŞTİRME -->
+        <div class="panel-block" style="border:1px solid #333; padding:20px;">
+            <h2>Bölge Durum Güncelleme</h2>
+            <div class="input-group">
+                <select id="city-select">
+                    <option value="34">İSTANBUL</option>
+                    <option value="06">ANKARA</option>
+                    <option value="35">İZMİR</option>
+                    <option value="01">ADANA</option>
+                    <option value="07">ANTALYA</option>
+                </select>
+                <select id="status-select">
+                    <option value="safe">KONTROLLÜ (YEŞİL)</option>
+                    <option value="active">AKTİF (TURUNCU)</option>
+                    <option value="total">TOTAL (KIRMIZI)</option>
+                </select>
+                <button onclick="updateStatus()">GÜNCELLE</button>
+            </div>
+        </div>
+
+        <button onclick="localStorage.clear(); location.reload();" style="background:#dc2626; color:#fff; border:none; margin-top:50px;">TÜM VERİTABANINI SIFIRLA</button>
+    </div>
+
+    <script src="core.js"></script>
+    <script>
+        function postNews() {
+            const text = document.getElementById('news-input').value;
+            if(text) {
+                addNews(text);
+                alert("Haber yayınlandı.");
+                document.getElementById('news-input').value = '';
+            }
+        }
+
+        function createCitizen() {
+            const name = document.getElementById('c-name').value;
+            const surname = document.getElementById('c-surname').value;
+            const age = document.getElementById('c-age').value;
+            const job = document.getElementById('c-job').value;
+            const city = document.getElementById('c-city').value;
+            const status = document.getElementById('c-status').value;
+
+            if(!name || !surname) { alert("Eksik bilgi."); return; }
+
+            // Random Code Generation
+            const code = city.substring(0,3).toUpperCase() + '-' + Math.floor(1000 + Math.random() * 9000);
+
+            const citizen = { code, name, surname, age, job, city, status };
+            addCitizen(citizen);
+
+            document.getElementById('generated-code').innerText = `KAYIT BAŞARILI. VATANDAŞ KODU: ${code}`;
+        }
+
+        function updateStatus() {
+            const id = document.getElementById('city-select').value;
+            const status = document.getElementById('status-select').value;
+            updateCityStatus(id, status);
+            alert("Bölge durumu güncellendi.");
+        }
+    </script>
+</body>
+</html>
