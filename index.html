@@ -170,7 +170,21 @@ function moveTooltip(e) {
 function hideTooltip() {
   tooltip.style.display = "none";
 }
+  // === CANLI HARİTA GÜNCELLEME ===
+setInterval(() => {
+  document.querySelectorAll("svg path").forEach(p => {
+    const id = p.id;
+    if (!id) return;
+
+    const data = getCityData(id);
+
+    p.classList.remove("status-safe", "status-active", "status-total", "status-unknown");
+    p.classList.add(`status-${data.status}`);
+  });
+}, 5000);
+
 </script>
 
 </body>
 </html>
+
