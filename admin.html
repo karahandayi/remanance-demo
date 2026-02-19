@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REMANANCE | System Override</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body id="admin-view">
+    <div class="scanlines"></div>
+
+    <header class="sys-header admin-header">
+        <div class="sys-title">
+            <h1>REMANANCE // ADMIN OVERRIDE</h1>
+            <span class="subtitle">AUTHORIZED PERSONNEL ONLY</span>
+        </div>
+        <div>
+            <a href="index.html" class="btn" target="_blank">OPEN MONITOR</a>
+            <button id="btn-reset-sim" class="btn btn-danger">RESET SIMULATION</button>
+        </div>
+    </header>
+
+    <main class="admin-grid">
+        <section class="admin-panel">
+            <h2>REGIONAL CONTROL</h2>
+            <div class="form-group">
+                <label>Target City</label>
+                <select id="admin-city-select"></select>
+            </div>
+            <div class="form-group">
+                <label>Target District (Optional)</label>
+                <select id="admin-district-select">
+                    <option value="">-- Apply to Entire City --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Status Override</label>
+                <select id="admin-status-select">
+                    <option value="GREEN">CONTROLLED (Green)</option>
+                    <option value="ORANGE">ACTIVE REMANANCE (Orange)</option>
+                    <option value="RED">TOTAL REMANANCE (Red)</option>
+                    <option value="BLACK">CONTACT LOST (Black)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Population Override</label>
+                <input type="number" id="admin-pop-input">
+            </div>
+            <button id="btn-update-region" class="btn">UPDATE REGION</button>
+        </section>
+
+        <section class="admin-panel">
+            <h2>INCIDENT FEED INJECTION</h2>
+            <div class="form-group">
+                <label>New Incident Log</label>
+                <input type="text" id="admin-news-input" placeholder="Enter military or civilian log...">
+            </div>
+            <button id="btn-add-news" class="btn">INJECT LOG</button>
+            
+            <h3 class="mt-20">Current Logs</h3>
+            <ul id="admin-news-list" class="admin-list"></ul>
+        </section>
+
+        <section class="admin-panel col-span-2">
+            <h2>CITIZEN DATABASE MANAGEMENT</h2>
+            <div class="citizen-form-grid">
+                <div class="form-group"><label>Name</label><input type="text" id="c-name"></div>
+                <div class="form-group"><label>Surname</label><input type="text" id="c-surname"></div>
+                <div class="form-group"><label>Age</label><input type="number" id="c-age"></div>
+                <div class="form-group"><label>Gender</label><input type="text" id="c-gender"></div>
+                <div class="form-group"><label>Profession</label><input type="text" id="c-profession"></div>
+                <div class="form-group"><label>City</label><select id="c-city"></select></div>
+                <div class="form-group"><label>District</label><select id="c-district"><option value="">N/A</option></select></div>
+                <div class="form-group"><label>Status</label>
+                    <select id="c-status">
+                        <option value="Alive">Alive</option>
+                        <option value="Infected">Infected</option>
+                        <option value="Missing">Missing</option>
+                        <option value="Dead">Dead</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group mt-20">
+                <label>Timeline Events (Comma separated)</label>
+                <input type="text" id="c-timeline" placeholder="e.g., Late April - Evacuated, Early May - Lost contact">
+            </div>
+            <button id="btn-add-citizen" class="btn">GENERATE & INJECT CITIZEN</button>
+
+            <h3 class="mt-20">Registered Citizens</h3>
+            <div class="table-container">
+                <table id="admin-citizen-table" class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Code</th><th>Name</th><th>Location</th><th>Status</th><th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
