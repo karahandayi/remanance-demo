@@ -3,99 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>REMANANCE | System Override</title>
+    <title>REMANANCE // ADMIN TERMINAL</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body id="admin-view">
-    <div class="scanlines"></div>
-
-    <header class="sys-header admin-header">
-        <div class="sys-title">
-            <h1>REMANANCE // ADMIN OVERRIDE</h1>
-            <span class="subtitle">AUTHORIZED PERSONNEL ONLY</span>
+<body id="admin-app">
+    <header class="top-bar admin-header">
+        <div class="logo">
+            <h1>REMANANCE // OVERSEER CONTROL</h1>
         </div>
-        <div>
-            <a href="index.html" class="btn" target="_blank">OPEN MONITOR</a>
-            <button id="btn-reset-sim" class="btn btn-danger">RESET SIMULATION</button>
+        <div class="system-notes">
+            <p>CHANGES PUSHED TO TERMINALS INSTANTLY VIA LOCALSTORAGE</p>
         </div>
     </header>
 
-    <main class="admin-grid">
-        <section class="admin-panel">
-            <h2>REGIONAL CONTROL</h2>
-            <div class="form-group">
-                <label>Target City</label>
-                <select id="admin-city-select"></select>
-            </div>
-            <div class="form-group">
-                <label>Target District (Optional)</label>
-                <select id="admin-district-select">
-                    <option value="">-- Apply to Entire City --</option>
+    <main class="admin-dashboard">
+        <section class="admin-section">
+            <h2>> CITY MANAGEMENT</h2>
+            <select id="admin-city-select">
+                <option value="">Select City...</option>
+            </select>
+            <div id="city-controls" class="controls-hidden">
+                <label>Status:</label>
+                <select id="city-status">
+                    <option value="green">CONTROLLED (Green)</option>
+                    <option value="orange">ACTIVE (Orange)</option>
+                    <option value="red">TOTAL (Red)</option>
+                    <option value="black">UNKNOWN (Black)</option>
                 </select>
+                <label>Population:</label>
+                <input type="number" id="city-pop">
+                <button id="btn-update-city" class="action-btn">UPDATE CITY</button>
             </div>
-            <div class="form-group">
-                <label>Status Override</label>
-                <select id="admin-status-select">
-                    <option value="GREEN">CONTROLLED (Green)</option>
-                    <option value="ORANGE">ACTIVE REMANANCE (Orange)</option>
-                    <option value="RED">TOTAL REMANANCE (Red)</option>
-                    <option value="BLACK">CONTACT LOST (Black)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Population Override</label>
-                <input type="number" id="admin-pop-input">
-            </div>
-            <button id="btn-update-region" class="btn">UPDATE REGION</button>
         </section>
 
-        <section class="admin-panel">
-            <h2>INCIDENT FEED INJECTION</h2>
-            <div class="form-group">
-                <label>New Incident Log</label>
-                <input type="text" id="admin-news-input" placeholder="Enter military or civilian log...">
+        <section class="admin-section">
+            <h2>> DISTRICT MANAGEMENT</h2>
+            <select id="admin-dist-city-select">
+                <option value="">Select City...</option>
+            </select>
+            <select id="admin-district-select">
+                <option value="">Select District...</option>
+            </select>
+            <div id="district-controls" class="controls-hidden">
+                <label>Status:</label>
+                <select id="district-status">
+                    <option value="green">CONTROLLED (Green)</option>
+                    <option value="orange">ACTIVE (Orange)</option>
+                    <option value="red">TOTAL (Red)</option>
+                    <option value="black">UNKNOWN (Black)</option>
+                </select>
+                <label>Population:</label>
+                <input type="number" id="district-pop">
+                <button id="btn-update-district" class="action-btn">UPDATE DISTRICT</button>
             </div>
-            <button id="btn-add-news" class="btn">INJECT LOG</button>
-            
-            <h3 class="mt-20">Current Logs</h3>
+        </section>
+
+        <section class="admin-section">
+            <h2>> NEWS OVERRIDE</h2>
+            <div class="news-input">
+                <input type="text" id="new-news-text" placeholder="Enter broadcast message...">
+                <button id="btn-add-news" class="action-btn">BROADCAST</button>
+            </div>
             <ul id="admin-news-list" class="admin-list"></ul>
         </section>
 
-        <section class="admin-panel col-span-2">
-            <h2>CITIZEN DATABASE MANAGEMENT</h2>
-            <div class="citizen-form-grid">
-                <div class="form-group"><label>Name</label><input type="text" id="c-name"></div>
-                <div class="form-group"><label>Surname</label><input type="text" id="c-surname"></div>
-                <div class="form-group"><label>Age</label><input type="number" id="c-age"></div>
-                <div class="form-group"><label>Gender</label><input type="text" id="c-gender"></div>
-                <div class="form-group"><label>Profession</label><input type="text" id="c-profession"></div>
-                <div class="form-group"><label>City</label><select id="c-city"></select></div>
-                <div class="form-group"><label>District</label><select id="c-district"><option value="">N/A</option></select></div>
-                <div class="form-group"><label>Status</label>
-                    <select id="c-status">
-                        <option value="Alive">Alive</option>
-                        <option value="Infected">Infected</option>
-                        <option value="Missing">Missing</option>
-                        <option value="Dead">Dead</option>
-                    </select>
-                </div>
+        <section class="admin-section full-width">
+            <h2>> CITIZEN DATABASE MANAGEMENT</h2>
+            <div class="citizen-form">
+                <input type="text" id="cit-name" placeholder="Name">
+                <input type="text" id="cit-surname" placeholder="Surname">
+                <input type="number" id="cit-age" placeholder="Age">
+                <select id="cit-gender">
+                    <option value="M">Male</option>
+                    <option value="F">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+                <input type="text" id="cit-profession" placeholder="Profession">
+                <select id="cit-city">
+                    <option value="istanbul">Istanbul</option>
+                    <option value="ankara">Ankara</option>
+                    <option value="izmir">Izmir</option>
+                </select>
+                <select id="cit-district">
+                    <option value="">Select City First...</option>
+                </select>
+                <select id="cit-status">
+                    <option value="Alive">Alive</option>
+                    <option value="Infected">Infected</option>
+                    <option value="Dead">Dead</option>
+                    <option value="Missing">Missing</option>
+                </select>
+                <textarea id="cit-timeline" placeholder="Timeline details (one per line)"></textarea>
+                <button id="btn-add-citizen" class="action-btn">GENERATE & SAVE CITIZEN</button>
             </div>
-            <div class="form-group mt-20">
-                <label>Timeline Events (Comma separated)</label>
-                <input type="text" id="c-timeline" placeholder="e.g., Late April - Evacuated, Early May - Lost contact">
-            </div>
-            <button id="btn-add-citizen" class="btn">GENERATE & INJECT CITIZEN</button>
-
-            <h3 class="mt-20">Registered Citizens</h3>
-            <div class="table-container">
-                <table id="admin-citizen-table" class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Code</th><th>Name</th><th>Location</th><th>Status</th><th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+            <div id="citizen-list-container">
+                <h3>REGISTERED CITIZENS</h3>
+                <ul id="admin-citizen-list" class="admin-list"></ul>
             </div>
         </section>
     </main>
