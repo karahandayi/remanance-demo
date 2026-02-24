@@ -1,546 +1,449 @@
-/**
- * REMANANCE SIMULATION ENGINE
- * Handles data synchronization, UI rendering, and the simulation loop.
- */
+// ==========================================
+// REMANANCE SIMULATION STATE & LOGIC
+// ==========================================
 
-const STORAGE_KEY = 'remanance_simulation_data';
-
-// Base map coordinates for generating the SVG
-const MAP_COORDS = {
-    "Istanbul": { x: 250, y: 120 },
-    "Ankara": { x: 400, y: 200 },
-    "Izmir": { x: 150, y: 250 },
-    "Bursa": { x: 280, y: 160 },
-    "Antalya": { x: 320, y: 350 },
-    "Adana": { x: 550, y: 320 },
-    "Trabzon": { x: 650, y: 100 },
-    "Diyarbakir": { x: 700, y: 280 }
+const INITIAL_STATE = {
+    simulation: { day: 17, phase: "Phase 2: Urban Collapse", lastContact: generateRandomTime() },
+    cities: {
+        istanbul: { id: 'istanbul', name: "Istanbul", status: "red", population: 14850230, x: 230, y: 140 },
+        ankara: { id: 'ankara', name: "Ankara", status: "red", population: 5320400, x: 420, y: 220 },
+        izmir: { id: 'izmir', name: "Izmir", status: "orange", population: 4150600, x: 130, y: 300 },
+        antalya: { id: 'antalya', name: "Antalya", status: "green", population: 2610000, x: 330, y: 410 },
+        trabzon: { id: 'trabzon', name: "Trabzon", status: "green", population: 810000, x: 750, y: 120 }
+    },
+    districts: {
+        istanbul_fatih: { id: 'istanbul_fatih', city: "istanbul", name: "Fatih", status: "green", population: 380400, dx: 5, dy: 5 },
+        istanbul_kucukcekmece: { id: 'istanbul_kucukcekmece', city: "istanbul", name: "Küçükçekmece", status: "green", population: 760100, dx: -10, dy: -5 },
+        istanbul_kadikoy: { id: 'istanbul_kadikoy', city: "istanbul", name: "Kadıköy", status: "orange", population: 460800, dx: 15, dy: 10 },
+        izmir_alsancak: { id: 'izmir_alsancak', city: "izmir", name: "Alsancak", status: "orange", population: 81000, dx: 0, dy: 5 },
+        izmir_cesme: { id: 'izmir_cesme', city: "izmir", name: "Çeşme", status: "orange", population: 42000, dx: -20, dy: 15 },
+        izmir_bergama: { id: 'izmir_bergama', city: "izmir", name: "Bergama", status: "green", population: 101000, dx: 10, dy: -30 },
+        ankara_cankaya: { id: 'ankara_cankaya', city: "ankara", name: "Çankaya", status: "green", population: 910000, dx: 5, dy: 5 },
+        ankara_polatli: { id: 'ankara_polatli', city: "ankara", name: "Polatlı", status: "green", population: 122000, dx: -25, dy: 15 }
+    },
+    news: [
+        { id: 1, text: "Contact lost with central Ankara hospitals.", timestamp: "Day 16 - 14:00" },
+        { id: 2, text: "Evacuation of Izmir coastline ordered.", timestamp: "Day 17 - 08:30" },
+        { id: 3, text: "Anomalous activity detected in Kadıköy.", timestamp: "Day 17 - 11:15" }
+    ],
+    citizens: {
+        "IST-4821": {
+            code: "IST-4821", name: "Ahmet", surname: "Yılmaz", age: 34, gender: "M", profession: "Engineer",
+            city: "istanbul", district: "istanbul_kadikoy", status: "Missing",
+            timeline: ["Late April 2026 - Joined evacuation convoy", "Early May 2026 - Last radio contact", "Exact time unknown"]
+        }
+    }
 };
 
-// Initial state builder
-function getDefaultData() {
-    return {
-        day: 17,
-        phase: "Phase 2: Urban Collapse",
-        cities: {
-            "Istanbul": { status: "RED", population: 15460000, districts: {
-                "Fatih": { status: "GREEN", population: 396000 },
-                "Küçükçekmece": { status: "GREEN", population: 805000 },
-                "Kadıköy": { status: "ORANGE", population: 483000 }
-            }},
-            "Ankara": { status: "RED", population: 5660000, districts: {
-                "Çankaya": { status: "GREEN", population: 925000 },
-                "Polatlı": { status: "GREEN", population: 125000 }
-            }},
-            "Izmir": { status: "ORANGE", population: 4367000, districts: {
-                "Alsancak": { status: "ORANGE", population: 85000 },
-                "Çeşme": { status: "ORANGE", population: 46000 },
-                "Bergama": { status: "GREEN", population: 104000 }
-            }},
-            "Bursa": { status: "GREEN", population: 3100000, districts: {} },
-            "Antalya": { status: "GREEN", population: 2548000, districts: {} },
-            "Adana": { status: "GREEN", population: 2200000, districts: {} },
-            "Trabzon": { status: "GREEN", population: 810000, districts: {} },
-            "Diyarbakir": { status: "GREEN", population: 1780000, districts: {} }
-        },
-        news: [
-            "14:00 - Communication lost with central Ankara.",
-            "11:30 - Military quarantine established around Izmir outer perimeter.",
-            "09:15 - Subject sightings reported in Kadıköy district."
-        ],
-        citizens: [
-            { 
-                code: "IST-4821", name: "Ahmet", surname: "Yılmaz", age: 34, 
-                gender: "Male", profession: "Engineer", city: "Istanbul", 
-                district: "Kadıköy", status: "Missing", 
-                timeline: ["Late April 2026 – Joined evacuation convoy", "Early May 2026 – Last radio contact"] 
-            },
-            {
-                code: "ANK-7394", name: "Ayşe", surname: "Kaya", age: 28,
-                gender: "Female", profession: "Medical Staff", city: "Ankara",
-                district: "Çankaya", status: "Alive",
-                timeline: ["Day 5 - Assigned to Çankaya Field Hospital", "Day 16 - Shift extended indefinitely"]
-            }
-        ]
-    };
-}
+let state = {};
+let activeEntity = null; // { type: 'city'|'district'|'citizen', id: string }
 
-// Data Management
-function loadData() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-        const defaultData = getDefaultData();
-        saveData(defaultData);
-        return defaultData;
+// --- Storage & Utils ---
+function initData() {
+    const stored = localStorage.getItem('remananceState');
+    if (!stored) {
+        state = JSON.parse(JSON.stringify(INITIAL_STATE));
+        saveData();
+    } else {
+        state = JSON.parse(stored);
     }
-    return JSON.parse(raw);
 }
 
-function saveData(data) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+function saveData() {
+    localStorage.setItem('remananceState', JSON.stringify(state));
 }
 
-let simData = loadData();
+function generateRandomTime() {
+    return `${Math.floor(Math.random() * 12 + 1)} hours ago`;
+}
 
-// Format numbers
-const formatPop = (num) => Math.floor(num).toLocaleString('en-US');
+function formatNumber(num) {
+    return Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
 
-// ==========================================
-// MONITOR VIEW LOGIC (index.html)
-// ==========================================
-if (document.getElementById('monitor-view')) {
+// Listen for updates from other tabs
+window.addEventListener('storage', (e) => {
+    if (e.key === 'remananceState') {
+        state = JSON.parse(e.newValue);
+        if (document.getElementById('observer-app')) renderObserverUI();
+        if (document.getElementById('admin-app')) renderAdminUI();
+    }
+});
+
+// --- OBSERVER APP ---
+if (document.getElementById('observer-app')) {
     
-    let activeSelection = { type: null, city: null, district: null };
-    let searchedCitizen = null;
+    window.onload = () => {
+        initData();
+        renderObserverUI();
+        setInterval(simulationTick, 4000); // 4 seconds = 1 sim tick
+        setupObserverEvents();
+    };
 
-    function initMonitor() {
-        renderHeader();
-        renderMap();
-        renderNews();
-        startSimulationTick();
-
-        // Listen for storage changes from admin panel
-        window.addEventListener('storage', (e) => {
-            if (e.key === STORAGE_KEY) {
-                simData = JSON.parse(e.newValue);
-                updateMonitorUI();
+    function simulationTick() {
+        // Decrease population based on status
+        const dropRates = { 'green': 0.00005, 'orange': 0.0005, 'red': 0.002, 'black': 0 };
+        
+        Object.keys(state.cities).forEach(key => {
+            const city = state.cities[key];
+            if(dropRates[city.status]) {
+                city.population -= city.population * dropRates[city.status];
             }
         });
 
-        document.getElementById('btn-search-citizen').addEventListener('click', handleSearch);
-        document.getElementById('citizen-code-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleSearch();
+        Object.keys(state.districts).forEach(key => {
+            const dist = state.districts[key];
+            if(dropRates[dist.status]) {
+                dist.population -= dist.population * dropRates[dist.status];
+            }
         });
+
+        saveData();
+        renderObserverUI();
     }
 
-    function renderHeader() {
-        document.getElementById('sim-day').innerText = `OUTBREAK DAY ${simData.day}`;
-        document.getElementById('sim-phase').innerText = simData.phase.toUpperCase();
+    function renderObserverUI() {
+        document.getElementById('sim-day').textContent = `Outbreak Day ${state.simulation.day}`;
+        document.getElementById('sim-phase').textContent = state.simulation.phase;
+        document.getElementById('last-contact').textContent = `Last confirmed sync: ${state.simulation.lastContact}`;
+
+        renderMap();
+        
+        if (activeEntity) {
+            renderRightPanel();
+        } else {
+            document.getElementById('info-display').innerHTML = `<div class="standby-msg">> AWAITING SELECTION...</div>`;
+        }
     }
 
     function renderMap() {
-        const container = document.getElementById('map-container');
-        let svgHTML = `<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">`;
-        
-        // Faint connection lines to look like a network
-        svgHTML += `<path d="M250,120 L400,200 L700,280 M400,200 L320,350 M250,120 L150,250 M400,200 L650,100" stroke="#222" stroke-width="2" fill="none"/>`;
+        const nodesGroup = document.getElementById('map-nodes');
+        nodesGroup.innerHTML = ''; // Clear
 
-        // Render cities
-        for (const [cityName, cityData] of Object.entries(simData.cities)) {
-            const coords = MAP_COORDS[cityName] || { x: 0, y: 0 };
-            const colorClass = cityData.status.toLowerCase();
+        Object.values(state.cities).forEach(city => {
+            const colorMap = { 'green': 'var(--green)', 'orange': 'var(--orange)', 'red': 'var(--red)', 'black': '#333' };
             
-            svgHTML += `
-                <circle cx="${coords.x}" cy="${coords.y}" r="8" class="city-node ${colorClass}" 
-                        onclick="window.selectCity('${cityName}')" />
-                <circle cx="${coords.x}" cy="${coords.y}" r="12" fill="none" stroke="currentColor" 
-                        class="city-node ${colorClass}" opacity="0.3" pointer-events="none" />
-                <text x="${coords.x + 15}" y="${coords.y + 4}" class="city-label">${cityName.toUpperCase()}</text>
+            // Draw City Node
+            const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            g.innerHTML = `
+                <circle cx="${city.x}" cy="${city.y}" r="8" fill="${colorMap[city.status]}" class="map-node" data-id="${city.id}"></circle>
+                <text x="${city.x + 12}" y="${city.y + 4}" class="node-label">${city.name.toUpperCase()}</text>
             `;
-        }
+            nodesGroup.appendChild(g);
 
-        // Render Citizen Marker if active
-        if (searchedCitizen) {
-            const cCity = MAP_COORDS[searchedCitizen.city];
-            if (cCity) {
-                // Offset slightly to simulate district positioning
-                const ox = cCity.x - 10;
-                const oy = cCity.y - 10;
-                svgHTML += `
-                    <circle cx="${ox}" cy="${oy}" r="4" fill="#fff" />
-                    <circle cx="${ox}" cy="${oy}" r="10" fill="none" stroke="#fff" class="citizen-marker" />
-                    <text x="${ox - 10}" y="${oy - 15}" class="city-label" fill="#fff" style="font-size:10px;">TARGET: ${searchedCitizen.code}</text>
-                `;
+            // Click event
+            g.querySelector('circle').addEventListener('click', () => {
+                activeEntity = { type: 'city', id: city.id };
+                document.getElementById('citizen-marker').classList.add('hidden');
+                renderObserverUI();
+            });
+        });
+
+        // Citizen Marker placement
+        const marker = document.getElementById('citizen-marker');
+        if (activeEntity && activeEntity.type === 'citizen') {
+            const citizen = state.citizens[activeEntity.id];
+            const city = state.cities[citizen.city];
+            const dist = state.districts[citizen.district];
+            if (city && dist) {
+                marker.setAttribute('transform', `translate(${city.x + dist.dx}, ${city.y + dist.dy})`);
+                marker.classList.remove('hidden');
             }
+        } else {
+            marker.classList.add('hidden');
         }
-
-        svgHTML += `</svg>`;
-        container.innerHTML = svgHTML;
     }
-
-    window.selectCity = function(cityName) {
-        activeSelection = { type: 'city', city: cityName, district: null };
-        searchedCitizen = null; // Clear citizen search visually
-        renderRightPanel();
-    };
-
-    window.selectDistrict = function(cityName, districtName) {
-        activeSelection = { type: 'district', city: cityName, district: districtName };
-        renderRightPanel();
-    };
 
     function renderRightPanel() {
-        const panel = document.getElementById('details-panel');
-        
-        if (searchedCitizen) {
-            // Display Citizen Data
-            let timelineHTML = searchedCitizen.timeline.map(t => `<li>- ${t}</li>`).join('');
-            panel.innerHTML = `
-                <div class="data-row">
-                    <div class="data-label">SUBJECT IDENTIFICATION</div>
-                    <div class="data-value">${searchedCitizen.code}</div>
-                </div>
-                <div class="data-row">
-                    <div class="data-label">NAME</div>
-                    <div class="data-value">${searchedCitizen.name.toUpperCase()} ${searchedCitizen.surname.toUpperCase()}</div>
-                </div>
-                <div class="grid-layout" style="padding:0; height:auto; gap:10px; border:none;">
-                    <div>
-                        <div class="data-label">AGE</div>
-                        <div class="data-value">${searchedCitizen.age}</div>
-                    </div>
-                    <div>
-                        <div class="data-label">GENDER</div>
-                        <div class="data-value">${searchedCitizen.gender.toUpperCase()}</div>
-                    </div>
-                </div>
-                <div class="data-row mt-20">
-                    <div class="data-label">LAST KNOWN LOCATION</div>
-                    <div class="data-value">${searchedCitizen.district.toUpperCase()}, ${searchedCitizen.city.toUpperCase()}</div>
-                </div>
-                <div class="data-row">
-                    <div class="data-label">CURRENT STATUS</div>
-                    <div class="data-value status-${searchedCitizen.status}">${searchedCitizen.status.toUpperCase()}</div>
-                </div>
-                <div class="data-row mt-20" style="border:none;">
-                    <div class="data-label">CHRONOLOGICAL LOG</div>
-                    <ul class="district-list" style="color:#aaa; font-size:12px;">${timelineHTML}</ul>
-                </div>
-            `;
-            return;
-        }
+        const panel = document.getElementById('info-display');
+        let html = '';
 
-        if (activeSelection.type === 'city') {
-            const city = simData.cities[activeSelection.city];
-            let districtsHTML = '';
+        if (activeEntity.type === 'city') {
+            const city = state.cities[activeEntity.id];
+            if (!city) return;
             
-            if (Object.keys(city.districts).length > 0) {
-                districtsHTML = `<div class="data-label mt-20">SUB-REGIONS (DISTRICTS)</div><ul class="district-list">`;
-                for (const [dName, dData] of Object.entries(city.districts)) {
-                    districtsHTML += `
-                        <li class="district-item" onclick="window.selectDistrict('${activeSelection.city}', '${dName}')">
-                            <span>${dName.toUpperCase()}</span>
-                            <span class="${dData.status.toLowerCase()}">${dData.status}</span>
-                        </li>`;
-                }
-                districtsHTML += `</ul>`;
+            html += `
+                <div class="panel-header">
+                    <h2 class="panel-title">${city.name}</h2>
+                    <span class="status-badge bg-${city.status}">${city.status.toUpperCase()}</span>
+                </div>
+                <div class="data-row">
+                    <span class="label">EST. POPULATION:</span>
+                    <span class="value">${formatNumber(city.population)}</span>
+                </div>
+            `;
+
+            // Districts
+            const cityDistricts = Object.values(state.districts).filter(d => d.city === city.id);
+            if (cityDistricts.length > 0) {
+                html += `<div class="district-list"><h3>> MONITORED DISTRICTS</h3>`;
+                cityDistricts.forEach(d => {
+                    html += `
+                        <div class="district-item" data-id="${d.id}" style="border-left-color: var(--${d.status})">
+                            <span class="label">${d.name}</span>
+                            <span class="value text-${d.status}">${d.status.toUpperCase()}</span>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
             }
 
-            panel.innerHTML = `
-                <div class="data-row">
-                    <div class="data-label">REGION DESIGNATION</div>
-                    <div class="data-value">${activeSelection.city.toUpperCase()}</div>
+            // News
+            html += `<div class="news-feed"><h3>> REGIONAL LOG</h3>`;
+            const recentNews = [...state.news].reverse().slice(0, 5);
+            recentNews.forEach(n => {
+                html += `<div class="news-item"><span class="news-time">${n.timestamp}</span>${n.text}</div>`;
+            });
+            html += `</div>`;
+
+            panel.innerHTML = html;
+
+            // Attach district click listeners
+            panel.querySelectorAll('.district-item').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    activeEntity = { type: 'district', id: e.currentTarget.dataset.id };
+                    renderObserverUI();
+                });
+            });
+        } 
+        else if (activeEntity.type === 'district') {
+            const dist = state.districts[activeEntity.id];
+            if (!dist) return;
+            const city = state.cities[dist.city];
+
+            html += `
+                <div class="panel-header">
+                    <div style="font-size: 0.9rem; color: var(--text-main); margin-bottom: 5px;">< ${city.name.toUpperCase()} REGION</div>
+                    <h2 class="panel-title">${dist.name} ZONE</h2>
+                    <span class="status-badge bg-${dist.status}">${dist.status.toUpperCase()}</span>
                 </div>
                 <div class="data-row">
-                    <div class="data-label">CONTAINMENT STATUS</div>
-                    <div class="data-value ${city.status.toLowerCase()}">${city.status}</div>
+                    <span class="label">EST. LOCAL POP:</span>
+                    <span class="value">${formatNumber(dist.population)}</span>
                 </div>
-                <div class="data-row">
-                    <div class="data-label">ESTIMATED SURVIVING POPULATION</div>
-                    <div class="data-value">${formatPop(city.population)}</div>
+                <div style="margin-top:20px; color: var(--text-main); font-size: 0.85rem;">
+                    > NO FURTHER TELEMETRY AVAILABLE FOR THIS SECTOR.
                 </div>
-                ${districtsHTML}
+                <button class="action-btn" style="margin-top:20px" onclick="activeEntity = {type: 'city', id: '${city.id}'}; renderObserverUI();">< BACK TO CITY</button>
             `;
-        } else if (activeSelection.type === 'district') {
-            const district = simData.cities[activeSelection.city].districts[activeSelection.district];
-            panel.innerHTML = `
-                <button onclick="window.selectCity('${activeSelection.city}')" style="margin-bottom:15px; font-size:10px;">&larr; BACK TO CITY</button>
-                <div class="data-row">
-                    <div class="data-label">SUB-REGION DESIGNATION</div>
-                    <div class="data-value">${activeSelection.district.toUpperCase()}</div>
-                </div>
-                <div class="data-row">
-                    <div class="data-label">PARENT REGION</div>
-                    <div class="data-value">${activeSelection.city.toUpperCase()}</div>
-                </div>
-                <div class="data-row">
-                    <div class="data-label">CONTAINMENT STATUS</div>
-                    <div class="data-value ${district.status.toLowerCase()}">${district.status}</div>
-                </div>
-                <div class="data-row">
-                    <div class="data-label">ESTIMATED POPULATION</div>
-                    <div class="data-value">${formatPop(district.population)}</div>
-                </div>
-            `;
-        } else {
-            panel.innerHTML = '<div class="idle-text">SELECT A REGION OR QUERY CITIZEN CODE TO VIEW DATA.</div>';
+            panel.innerHTML = html;
         }
-    }
+        else if (activeEntity.type === 'citizen') {
+            const cit = state.citizens[activeEntity.id];
+            if (!cit) return;
 
-    function renderNews() {
-        const container = document.getElementById('news-feed');
-        container.innerHTML = simData.news.map(n => `<div class="news-item">> ${n}</div>`).join('');
-    }
+            const city = state.cities[cit.city];
+            const dist = state.districts[cit.district];
 
-    function handleSearch() {
-        const input = document.getElementById('citizen-code-input').value.trim().toUpperCase();
-        const feedback = document.getElementById('search-feedback');
-        
-        if (!input) return;
+            let statusColor = '#fff';
+            if (cit.status === 'Alive') statusColor = 'var(--green)';
+            if (cit.status === 'Infected') statusColor = 'var(--orange)';
+            if (cit.status === 'Dead') statusColor = 'var(--red)';
+            if (cit.status === 'Missing') statusColor = 'var(--text-main)';
 
-        const citizen = simData.citizens.find(c => c.code === input);
-        if (citizen) {
-            searchedCitizen = citizen;
-            activeSelection = { type: null, city: null, district: null }; // Override region selection
-            feedback.innerText = "SUBJECT FOUND.";
-            feedback.style.color = "var(--color-green)";
-            renderRightPanel();
-            renderMap(); // update marker
-        } else {
-            feedback.innerText = "RECORD NOT FOUND OR CLASSIFIED.";
-            feedback.style.color = "var(--color-red)";
-        }
-    }
-
-    function updateMonitorUI() {
-        renderHeader();
-        renderMap();
-        renderRightPanel();
-        renderNews();
-    }
-
-    // Population Decrease Simulation Loop
-    function startSimulationTick() {
-        setInterval(() => {
-            let dataChanged = false;
-            for (const cKey in simData.cities) {
-                const city = simData.cities[cKey];
-                let decreaseRate = getRate(city.status);
+            html += `
+                <div class="panel-header">
+                    <div style="font-size: 0.9rem; color: var(--text-main); margin-bottom: 5px;">> FILE REF: ${cit.code}</div>
+                    <h2 class="panel-title">${cit.name} ${cit.surname}</h2>
+                    <span class="status-badge" style="background: #111; border: 1px solid ${statusColor}; color: ${statusColor}">${cit.status.toUpperCase()}</span>
+                </div>
+                <div class="data-row"><span class="label">AGE/GENDER:</span><span class="value">${cit.age} / ${cit.gender}</span></div>
+                <div class="data-row"><span class="label">PROFESSION:</span><span class="value">${cit.profession}</span></div>
+                <div class="data-row"><span class="label">LAST LOC:</span><span class="value">${dist ? dist.name : 'Unknown'}, ${city ? city.name : 'Unknown'}</span></div>
                 
-                if (city.population > 0) {
-                    city.population -= city.population * decreaseRate;
-                    if(city.population < 0) city.population = 0;
-                    dataChanged = true;
-                }
-
-                for (const dKey in city.districts) {
-                    const district = city.districts[dKey];
-                    let dRate = getRate(district.status);
-                    if (district.population > 0) {
-                        district.population -= district.population * dRate;
-                        if(district.population < 0) district.population = 0;
-                    }
-                }
-            }
-
-            if (dataChanged) {
-                saveData(simData);
-                // Only update specific panel parts so we don't disrupt user clicks constantly
-                if (activeSelection.type) renderRightPanel(); 
-            }
-        }, 5000); // Ticks every 5 seconds
-    }
-
-    function getRate(status) {
-        switch(status) {
-            case 'RED': return 0.0005;   // Faster drop
-            case 'ORANGE': return 0.0001; // Moderate drop
-            case 'GREEN': return 0.00001; // Slow drop
-            case 'BLACK': return 0.001;   // Unknown/massive drop
-            default: return 0;
+                <div class="timeline" style="margin-top: 20px;">
+                    <h3>> CHRONOLOGY LOG</h3>
+                    ${cit.timeline.map(t => `<div class="timeline-item">${t}</div>`).join('')}
+                </div>
+            `;
+            panel.innerHTML = html;
         }
     }
 
-    initMonitor();
+    function setupObserverEvents() {
+        document.getElementById('btn-search').addEventListener('click', () => {
+            const val = document.getElementById('citizen-search').value.trim().toUpperCase();
+            const err = document.getElementById('search-error');
+            if (!val) return;
+
+            if (state.citizens[val]) {
+                err.textContent = '';
+                activeEntity = { type: 'citizen', id: val };
+                renderObserverUI();
+            } else {
+                err.textContent = "ERR: RECORD NOT FOUND";
+            }
+        });
+    }
 }
 
-// ==========================================
-// ADMIN VIEW LOGIC (admin.html)
-// ==========================================
-if (document.getElementById('admin-view')) {
+// --- ADMIN APP ---
+if (document.getElementById('admin-app')) {
+    
+    window.onload = () => {
+        initData();
+        renderAdminUI();
+        setupAdminEvents();
+    };
 
-    function initAdmin() {
-        populateSelects();
-        renderAdminNews();
-        renderAdminCitizens();
-
-        document.getElementById('admin-city-select').addEventListener('change', populateAdminDistricts);
-        document.getElementById('btn-update-region').addEventListener('click', updateRegion);
-        document.getElementById('btn-add-news').addEventListener('click', addNews);
-        document.getElementById('btn-add-citizen').addEventListener('click', addCitizen);
-        document.getElementById('btn-reset-sim').addEventListener('click', () => {
-            if(confirm("Wipe all data and reset simulation?")) {
-                saveData(getDefaultData());
-                location.reload();
-            }
-        });
-        
-        // Auto-update form values when city/district is selected
-        document.getElementById('admin-city-select').addEventListener('change', fillPopStatus);
-        document.getElementById('admin-district-select').addEventListener('change', fillPopStatus);
-
-        window.addEventListener('storage', (e) => {
-            if (e.key === STORAGE_KEY) simData = JSON.parse(e.newValue);
-        });
-        
-        // Initial populate
-        fillPopStatus();
-    }
-
-    function populateSelects() {
+    function renderAdminUI() {
+        // Populate City Selects
         const citySelect = document.getElementById('admin-city-select');
-        const cCitySelect = document.getElementById('c-city');
+        const distCitySelect = document.getElementById('admin-dist-city-select');
+        const citCitySelect = document.getElementById('cit-city');
         
-        citySelect.innerHTML = ''; cCitySelect.innerHTML = '';
-        
-        for (const city in simData.cities) {
-            const opt = `<option value="${city}">${city}</option>`;
-            citySelect.innerHTML += opt;
-            cCitySelect.innerHTML += opt;
-        }
-        populateAdminDistricts();
-        populateCitizenDistricts();
-        
-        cCitySelect.addEventListener('change', populateCitizenDistricts);
-    }
-
-    function populateAdminDistricts() {
-        const city = document.getElementById('admin-city-select').value;
-        const distSelect = document.getElementById('admin-district-select');
-        distSelect.innerHTML = '<option value="">-- Apply to Entire City --</option>';
-        
-        if (city && simData.cities[city].districts) {
-            for (const dist in simData.cities[city].districts) {
-                distSelect.innerHTML += `<option value="${dist}">${dist}</option>`;
-            }
-        }
-    }
-
-    function populateCitizenDistricts() {
-        const city = document.getElementById('c-city').value;
-        const distSelect = document.getElementById('c-district');
-        distSelect.innerHTML = '<option value="">N/A</option>';
-        
-        if (city && simData.cities[city].districts) {
-            for (const dist in simData.cities[city].districts) {
-                distSelect.innerHTML += `<option value="${dist}">${dist}</option>`;
-            }
-        }
-    }
-
-    function fillPopStatus() {
-        const city = document.getElementById('admin-city-select').value;
-        const dist = document.getElementById('admin-district-select').value;
-        const popInput = document.getElementById('admin-pop-input');
-        const statusSelect = document.getElementById('admin-status-select');
-
-        if (!city) return;
-
-        if (dist && dist !== "") {
-            popInput.value = Math.floor(simData.cities[city].districts[dist].population);
-            statusSelect.value = simData.cities[city].districts[dist].status;
-        } else {
-            popInput.value = Math.floor(simData.cities[city].population);
-            statusSelect.value = simData.cities[city].status;
-        }
-    }
-
-    function updateRegion() {
-        const city = document.getElementById('admin-city-select').value;
-        const dist = document.getElementById('admin-district-select').value;
-        const status = document.getElementById('admin-status-select').value;
-        const pop = parseInt(document.getElementById('admin-pop-input').value);
-
-        if (dist && dist !== "") {
-            simData.cities[city].districts[dist].status = status;
-            simData.cities[city].districts[dist].population = pop;
-        } else {
-            simData.cities[city].status = status;
-            simData.cities[city].population = pop;
-        }
-        
-        saveData(simData);
-        alert('System data updated successfully.');
-    }
-
-    function renderAdminNews() {
-        const list = document.getElementById('admin-news-list');
-        list.innerHTML = simData.news.map((n, i) => `
-            <li>
-                <span>${n}</span>
-                <button class="btn-danger" onclick="window.deleteNews(${i})">DEL</button>
-            </li>
-        `).join('');
-    }
-
-    function addNews() {
-        const input = document.getElementById('admin-news-input');
-        if (input.value.trim() === '') return;
-        
-        simData.news.unshift(input.value.trim());
-        if (simData.news.length > 10) simData.news.pop(); // Keep array small
-        
-        saveData(simData);
-        input.value = '';
-        renderAdminNews();
-    }
-
-    window.deleteNews = function(index) {
-        simData.news.splice(index, 1);
-        saveData(simData);
-        renderAdminNews();
-    }
-
-    function renderAdminCitizens() {
-        const tbody = document.querySelector('#admin-citizen-table tbody');
-        tbody.innerHTML = simData.citizens.map((c, i) => `
-            <tr>
-                <td><strong>${c.code}</strong></td>
-                <td>${c.name} ${c.surname}</td>
-                <td>${c.city} ${c.district !== 'N/A' ? `(${c.district})` : ''}</td>
-                <td class="status-${c.status}">${c.status}</td>
-                <td>
-                    <button class="btn-danger" onclick="window.deleteCitizen(${i})">DEL</button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    function addCitizen() {
-        const name = document.getElementById('c-name').value.trim();
-        const surname = document.getElementById('c-surname').value.trim();
-        const age = document.getElementById('c-age').value;
-        const gender = document.getElementById('c-gender').value;
-        const profession = document.getElementById('c-profession').value;
-        const city = document.getElementById('c-city').value;
-        const district = document.getElementById('c-district').value || "N/A";
-        const status = document.getElementById('c-status').value;
-        const timelineRaw = document.getElementById('c-timeline').value;
-
-        if(!name || !surname || !age) {
-            alert("Name, Surname, and Age are required fields.");
-            return;
-        }
-
-        // Generate Code: FIRST 3 LETTERS OF CITY + "-" + 4 RANDOM DIGITS
-        const prefix = city.substring(0,3).toUpperCase();
-        const num = Math.floor(1000 + Math.random() * 9000);
-        const code = `${prefix}-${num}`;
-
-        const timeline = timelineRaw.split(',').map(item => item.trim()).filter(item => item !== "");
-
-        simData.citizens.push({
-            code, name, surname, age, gender, profession, city, district, status, timeline
+        [citySelect, distCitySelect, citCitySelect].forEach(sel => {
+            const currentVal = sel.value;
+            sel.innerHTML = `<option value="">Select City...</option>` + 
+                Object.values(state.cities).map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            sel.value = currentVal;
         });
 
-        saveData(simData);
-        renderAdminCitizens();
-        
-        // Reset basic fields
-        document.getElementById('c-name').value = '';
-        document.getElementById('c-surname').value = '';
-        document.getElementById('c-timeline').value = '';
-        
-        alert(`Citizen Generated. Code: ${code}`);
+        renderNewsList();
+        renderCitizenList();
     }
 
-    window.deleteCitizen = function(index) {
-        if(confirm("Delete this citizen record permanently?")) {
-            simData.citizens.splice(index, 1);
-            saveData(simData);
-            renderAdminCitizens();
+    function setupAdminEvents() {
+        // CITY MANAGEMENT
+        const cSelect = document.getElementById('admin-city-select');
+        const cControls = document.getElementById('city-controls');
+        cSelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            if (val) {
+                document.getElementById('city-status').value = state.cities[val].status;
+                document.getElementById('city-pop').value = Math.floor(state.cities[val].population);
+                cControls.style.display = 'block';
+            } else {
+                cControls.style.display = 'none';
+            }
+        });
+
+        document.getElementById('btn-update-city').addEventListener('click', () => {
+            const id = cSelect.value;
+            state.cities[id].status = document.getElementById('city-status').value;
+            state.cities[id].population = parseFloat(document.getElementById('city-pop').value);
+            saveData();
+            alert('City Updated.');
+        });
+
+        // DISTRICT MANAGEMENT
+        const dcSelect = document.getElementById('admin-dist-city-select');
+        const dSelect = document.getElementById('admin-district-select');
+        const dControls = document.getElementById('district-controls');
+
+        dcSelect.addEventListener('change', (e) => {
+            const cityId = e.target.value;
+            dSelect.innerHTML = `<option value="">Select District...</option>`;
+            dControls.style.display = 'none';
+            if (cityId) {
+                const dists = Object.values(state.districts).filter(d => d.city === cityId);
+                dSelect.innerHTML += dists.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+            }
+        });
+
+        dSelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            if (val) {
+                document.getElementById('district-status').value = state.districts[val].status;
+                document.getElementById('district-pop').value = Math.floor(state.districts[val].population);
+                dControls.style.display = 'block';
+            } else {
+                dControls.style.display = 'none';
+            }
+        });
+
+        document.getElementById('btn-update-district').addEventListener('click', () => {
+            const id = dSelect.value;
+            state.districts[id].status = document.getElementById('district-status').value;
+            state.districts[id].population = parseFloat(document.getElementById('district-pop').value);
+            saveData();
+            alert('District Updated.');
+        });
+
+        // NEWS MANAGEMENT
+        document.getElementById('btn-add-news').addEventListener('click', () => {
+            const text = document.getElementById('new-news-text').value.trim();
+            if(!text) return;
+            const newId = state.news.length > 0 ? state.news[state.news.length-1].id + 1 : 1;
+            state.news.push({ id: newId, text, timestamp: `Day ${state.simulation.day} - System Time` });
+            document.getElementById('new-news-text').value = '';
+            saveData();
+            renderNewsList();
+        });
+
+        // CITIZEN MANAGEMENT
+        document.getElementById('cit-city').addEventListener('change', (e) => {
+            const cityId = e.target.value;
+            const distSel = document.getElementById('cit-district');
+            const dists = Object.values(state.districts).filter(d => d.city === cityId);
+            distSel.innerHTML = dists.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+        });
+
+        document.getElementById('btn-add-citizen').addEventListener('click', () => {
+            const name = document.getElementById('cit-name').value;
+            const surname = document.getElementById('cit-surname').value;
+            const age = document.getElementById('cit-age').value;
+            const city = document.getElementById('cit-city').value;
+            const district = document.getElementById('cit-district').value;
+            
+            if (!name || !surname || !city || !district) return alert("Fill required fields.");
+
+            const prefix = city.substring(0,3).toUpperCase();
+            const rNum = Math.floor(1000 + Math.random() * 9000);
+            const code = `${prefix}-${rNum}`;
+
+            const tlRaw = document.getElementById('cit-timeline').value;
+            const timeline = tlRaw.split('\n').filter(t => t.trim() !== '');
+
+            state.citizens[code] = {
+                code, name, surname, age,
+                gender: document.getElementById('cit-gender').value,
+                profession: document.getElementById('cit-profession').value,
+                status: document.getElementById('cit-status').value,
+                city, district,
+                timeline: timeline.length ? timeline : ["Record created."]
+            };
+
+            saveData();
+            renderCitizenList();
+            
+            // clear form
+            document.querySelectorAll('.citizen-form input, .citizen-form textarea').forEach(el => el.value='');
+            alert(`Citizen Generated: ${code}`);
+        });
+    }
+
+    function renderNewsList() {
+        const ul = document.getElementById('admin-news-list');
+        ul.innerHTML = '';
+        state.news.forEach((n, idx) => {
+            const li = document.createElement('li');
+            li.innerHTML = `<span>[${n.timestamp}] ${n.text}</span> <button class="del-btn" onclick="deleteNews(${idx})">DEL</button>`;
+            ul.appendChild(li);
+        });
+    }
+
+    window.deleteNews = function(idx) {
+        state.news.splice(idx, 1);
+        saveData();
+        renderNewsList();
+    };
+
+    function renderCitizenList() {
+        const ul = document.getElementById('admin-citizen-list');
+        ul.innerHTML = '';
+        Object.values(state.citizens).forEach(c => {
+            const li = document.createElement('li');
+            li.innerHTML = `<span><strong>${c.code}</strong> | ${c.name} ${c.surname} - ${c.status}</span> <button class="del-btn" onclick="deleteCitizen('${c.code}')">DEL</button>`;
+            ul.appendChild(li);
+        });
+    }
+
+    window.deleteCitizen = function(code) {
+        if(confirm(`Delete ${code}?`)){
+            delete state.citizens[code];
+            saveData();
+            renderCitizenList();
         }
     }
-
-    initAdmin();
 }
