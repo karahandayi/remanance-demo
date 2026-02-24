@@ -3,66 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>REMANANCE | Regional Outbreak Monitoring</title>
+    <title>REMANANCE // OBSERVER TERMINAL</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body id="monitor-view">
-    <div class="scanlines"></div>
+<body id="observer-app">
+    <div class="crt-overlay"></div>
     
-    <header class="sys-header">
-        <div class="sys-title">
-            <h1>REMANANCE</h1>
-            <span class="subtitle">CIVILIAN & REGIONAL OUTBREAK MONITORING SYSTEM</span>
+    <header class="top-bar">
+        <div class="logo">
+            <h1>REMANANCE_SYS_v2.4</h1>
+            <span class="classification">CLASSIFIED: OBSERVER CLEARANCE ONLY</span>
         </div>
-        <div class="sys-status">
-            <div id="sim-day" class="highlight">OUTBREAK DAY --</div>
-            <div id="sim-phase">PHASE --</div>
-            <div class="sys-notes">
-                <span class="warning-text">DATA RELIABILITY: LOW</span><br>
-                <span>LAST CONFIRMED CONTACT: 6 HOURS AGO</span><br>
-                <span>SOME DATA MAY BE INCOMPLETE</span>
-            </div>
+        <div class="sim-time">
+            <h2 id="sim-day">Outbreak Day --</h2>
+            <h3 id="sim-phase">Phase --</h3>
+        </div>
+        <div class="system-notes">
+            <p>DATA RELIABILITY: <span class="warn-text">LOW</span></p>
+            <p id="last-contact">Last confirmed sync: --</p>
+            <p class="blink">Monitoring automated systems...</p>
         </div>
     </header>
 
-    <main class="grid-layout">
+    <main class="dashboard">
         <section class="left-panel">
-            <div class="panel-header">
-                <h2>GEOGRAPHIC OVERVIEW</h2>
-                <div class="legend">
-                    <span class="dot green"></span> CONTROLLED
-                    <span class="dot orange"></span> ACTIVE
-                    <span class="dot red"></span> TOTAL
-                    <span class="dot black"></span> UNKNOWN
+            <div class="search-module">
+                <label for="citizen-search">> CITIZEN DATABASE QUERY</label>
+                <div class="search-wrapper">
+                    <input type="text" id="citizen-search" placeholder="Enter Code (e.g., IST-0001)">
+                    <button id="btn-search">SEARCH</button>
                 </div>
+                <div id="search-error" class="error-msg"></div>
             </div>
-            <div class="map-container" id="map-container">
-                </div>
 
-            <div class="citizen-search">
-                <h2>CITIZEN DATABASE SEARCH</h2>
-                <div class="search-box">
-                    <input type="text" id="citizen-code-input" placeholder="Enter Citizen Code (e.g., IST-4821)" autocomplete="off">
-                    <button id="btn-search-citizen">QUERY</button>
+            <div class="map-container">
+                <svg id="turkey-map" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet">
+                    <polygon points="80,200 150,120 300,80 500,90 700,70 900,100 950,200 900,350 750,380 600,450 450,480 250,420 120,450 60,320" class="landmass" />
+                    <g id="map-nodes"></g>
+                    <g id="citizen-marker" class="hidden">
+                        <circle cx="0" cy="0" r="6" class="pulse-marker" />
+                        <text x="12" y="4" class="marker-label">TARGET FOUND</text>
+                    </g>
+                </svg>
+                <div class="map-legend">
+                    <div><span class="dot green"></span> CONTROLLED</div>
+                    <div><span class="dot orange"></span> ACTIVE</div>
+                    <div><span class="dot red"></span> TOTAL REMANANCE</div>
+                    <div><span class="dot black"></span> UNKNOWN</div>
                 </div>
-                <div id="search-feedback" class="feedback-text"></div>
             </div>
         </section>
 
         <section class="right-panel">
-            <div class="panel-header">
-                <h2>TELEMETRY DATA</h2>
+            <div id="info-display" class="panel-content">
+                <div class="standby-msg">> AWAITING SELECTION...</div>
             </div>
-            
-            <div id="details-panel" class="details-container">
-                <div class="idle-text">SELECT A REGION OR QUERY CITIZEN CODE TO VIEW DATA.</div>
-            </div>
-
-            <div class="panel-header mt-20">
-                <h2>INCIDENT FEED</h2>
-            </div>
-            <div class="news-feed" id="news-feed">
-                </div>
         </section>
     </main>
 
